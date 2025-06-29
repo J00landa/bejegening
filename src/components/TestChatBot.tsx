@@ -1112,10 +1112,13 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
                   <MarkdownRenderer 
                     content={isStreaming ? streamingResponse : response} 
                     className="text-gray-700 text-sm"
+                  />
+                  <p className="text-green-800 text-sm font-medium mt-2">
                   {isStreaming ? '🎭 Rollenspel in uitvoering...' : '🎭 Gesprekspartner reageert:'}
                   {isStreaming && (
                     <span className="inline-block w-2 h-4 bg-purple-600 animate-pulse ml-1 align-text-bottom"></span>
                   )}
+                  </p>
                 </div>
               )}
             </div>
