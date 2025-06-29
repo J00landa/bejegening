@@ -161,6 +161,25 @@ export default function Home() {
                   <li>• Opschalingsprotocol volgen (beveiliging, camera's)</li>
                 </ul>
               </div>
+              <div className="mt-3 p-2 bg-pink-200 rounded text-xs text-pink-900">
+                <strong>🎭 Gespreksdynamiek:</strong>
+                <ul className="mt-1 space-y-1">
+                  <li>• <strong>Start:</strong> Paniek, hoog stemvolume, korte zinnen</li>
+                  <li>• <strong>Bij empathie:</strong> Enige opluchting, blijft bezorgd</li>
+                  <li>• <strong>Geen actie:</strong> Escalatie, wil zelf gaan zoeken</li>
+                  <li>• <strong>Goed protocol:</strong> Wordt rustiger, toont vertrouwen</li>
+                </ul>
+              </div>
+              <div className="mt-3 p-2 bg-pink-300 rounded text-xs text-pink-900">
+                <strong>✅ Succescriteria (verborgen voor student):</strong>
+                <ul className="mt-1 space-y-1">
+                  <li>• Student toont empathie ("Ik begrijp dat dit stressvol is...")</li>
+                  <li>• Student stelt W-vragen (naam, kleding, laatste plek)</li>
+                  <li>• Student vraagt of moeder al iemand heeft gealarmeerd</li>
+                  <li>• Student schakelt hulplijnen in (porto, centrale, beveiliging)</li>
+                  <li>• Student vat afspraken samen ("Ik blijf hier bij u...")</li>
+                </ul>
+              </div>
             </div>
 
             <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
