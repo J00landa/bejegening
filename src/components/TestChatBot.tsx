@@ -817,7 +817,15 @@ Geef feedback in deze structuur:
                 
                 // Add token to streaming response
                 const newResponse = currentStreamingResponseRef.current + data.token
-                currentStreamingResponseRef.current = newResponse
+                
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}currentStreamingResponseRef.current = newResponse
                 setStreamingResponse(newResponse)
                 console.log('Streaming token:', data.token, 'Total length:', newResponse.length)
               }
