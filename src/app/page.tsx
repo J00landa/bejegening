@@ -1,241 +1,188 @@
 import TestChatBot from '@/components/TestChatBot'
+import CopyButton from '@/components/CopyButton'
+import Image from 'next/image'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-6">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600 rounded-full mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            HTV Conversational Trainer
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">
+            Vibe Coding Template
           </h1>
           
-          <p className="text-xl text-blue-700 font-medium mb-6">
-            Oefen realistische gesprekssituaties voor Handhaving, Toezicht en Veiligheid
+          <p className="text-xl text-purple-700 font-medium mb-6">
+            Dit is een template om met Bolt te werken waarbij we gebruik maken van Gemini. Dit template is gemaakt door Tom Naberink
           </p>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-3xl mx-auto mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              🎭 Hoe werkt de Conversational Trainer?
-            </h2>
-            <div className="text-left space-y-4">
-              <div className="flex items-start space-x-3">
-                <span className="text-blue-600 text-2xl">1️⃣</span>
-                <div>
-                  <h3 className="font-medium text-gray-800">Kies een scenario</h3>
-                  <p className="text-sm text-gray-600">Selecteer uit verschillende praktijksituaties of beschrijf je eigen scenario</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-green-600 text-2xl">2️⃣</span>
-                <div>
-                  <h3 className="font-medium text-gray-800">Start het rollenspel</h3>
-                  <p className="text-sm text-gray-600">De AI neemt de rol aan van de gesprekspartner (burger, overtreder, collega, etc.)</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <span className="text-purple-600 text-2xl">3️⃣</span>
-                <div>
-                  <h3 className="font-medium text-gray-800">Oefen het gesprek</h3>
-                  <p className="text-sm text-gray-600">Reageer natuurlijk - de AI toont emoties, lichaamstaal en reageert dynamisch</p>
-                </div>
-              </div>
+          {/* AI voor Docenten Logo */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-white rounded-lg shadow-lg p-4">
+              <Image 
+                src="/images/ai-voor-docenten-logo.png" 
+                alt="AI voor Docenten Logo" 
+                width={192} 
+                height={96}
+                className="rounded-lg"
+              />
             </div>
           </div>
         </div>
 
-        {/* Scenario Selection */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-bold text-blue-800 mb-6 flex items-center">
-              <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                🎯
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto">
+          
+          {/* Setup Instructions */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-2xl font-bold text-purple-800 mb-6 flex items-center">
+              <span className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                🔧
               </span>
-              Kies een scenario om mee te oefenen
+              Setup Instructies
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Handhaving scenarios */}
-              <div className="p-4 bg-red-50 rounded-lg border border-red-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">🚫</span>
-                  <h3 className="font-semibold text-red-800">Overtreding APV</h3>
-                </div>
-                <p className="text-sm text-red-700 mb-3">Aanspreek van een persoon die alcohol drinkt op straat</p>
-                <div className="text-xs text-red-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Boze burger die zich onterecht behandeld voelt</p>
-                  <p>• <strong>Emotie:</strong> Defensief, geïrriteerd</p>
-                  <p>• <strong>Uitdaging:</strong> De-escalatie en uitleg wetgeving</p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">🚗</span>
-                  <h3 className="font-semibold text-orange-800">Parkeerovertreding</h3>
-                </div>
-                <p className="text-sm text-orange-700 mb-3">Gesprek met automobilist die verkeerd geparkeerd staat</p>
-                <div className="text-xs text-orange-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Gehaaste automobilist met excuses</p>
-                  <p>• <strong>Emotie:</strong> Gestrest, smekend</p>
-                  <p>• <strong>Uitdaging:</strong> Consequent blijven, empathie tonen</p>
+            <div className="space-y-6">
+              
+              {/* Step 1 - Fork GitHub Template */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 1: Fork dit template in GitHub
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Ga naar <a href="https://github.com" target="_blank" className="text-purple-600 hover:text-purple-800 underline">github.com</a> en login in. Ga dan naar deze pagina: <a href="https://github.com/TomNaberink/apitemplateTom" target="_blank" className="text-purple-600 hover:text-purple-800 underline">https://github.com/TomNaberink/apitemplateTom</a>
+                </p>
+                <p className="text-gray-600 mb-3">
+                  Klik rechtsbovenin op '<strong>Use this template</strong>', geef het een gepaste naam voor je project en klik op '<strong>create fork</strong>'.
+                </p>
+                <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-gray-400">GitHub Repository URL</span>
+                    <CopyButton 
+                      text="https://github.com/TomNaberink/apitemplateTom"
+                      className="text-purple-400 hover:text-purple-300 text-xs transition-colors"
+                      title="Kopieer GitHub URL"
+                    />
+                  </div>
+                  <code>https://github.com/TomNaberink/apitemplateTom</code>
                 </div>
               </div>
 
-              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">🏪</span>
-                  <h3 className="font-semibold text-purple-800">Controle winkel</h3>
+              {/* Step 2 - Import from GitHub in Bolt */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 2: Import in Bolt.new
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Open <a href="https://bolt.new" target="_blank" className="text-purple-600 hover:text-purple-800 underline">Bolt.new</a> en login. Selecteer '<strong>import from github</strong>' en login op GitHub. Kies dan de '<strong>repository</strong>' die je net hebt geforkt.
+                </p>
+              </div>
+
+              {/* Step 3 - Create .env.local */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 3: Maak een .env.local bestand
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Als het template is geladen ga je naar het <strong>tabblad "Code"</strong>. Bij de files doe je <strong>rechtermuisknop</strong> en klik je op <strong>"New File"</strong>. Die noem je <code className="bg-gray-100 px-2 py-1 rounded text-sm">.env.local</code>. Daar binnen zet je het volgende:
+                </p>
+                <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
+                  <div className="flex items-center justify-end mb-2">
+                    <CopyButton 
+                      text="GEMINI_API_KEY=your_actual_api_key_here"
+                      className="text-purple-400 hover:text-purple-300 text-xs transition-colors"
+                      title="Kopieer .env.local inhoud"
+                    />
+                  </div>
+                  <code>GEMINI_API_KEY=your_actual_api_key_here</code>
                 </div>
-                <p className="text-sm text-purple-700 mb-3">Inspectie van een horecagelegenheid</p>
-                <div className="text-xs text-purple-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Eigenaar die niet wil meewerken</p>
-                  <p>• <strong>Emotie:</strong> Wantrouwend, obstructief</p>
-                  <p>• <strong>Uitdaging:</strong> Autoriteit uitstralen, rechten uitleggen</p>
+                <p className="text-orange-600 text-sm mt-2 font-medium">
+                  ⚠️ Vervang "your_actual_api_key_here" met je echte API key! (zie stap 3)
+                </p>
+              </div>
+
+              {/* Step 4 - Get API Key */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 4: Verkrijg een Gemini API Key
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Ga naar Google AI Studio om je gratis API key aan te maken:
+                </p>
+                <a 
+                  href="https://makersuite.google.com/app/apikey" 
+                  target="_blank"
+                  className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <span>Verkrijg API Key</span>
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+                
+                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-orange-800 text-sm">
+                    ⚠️ <strong>Let op</strong>, je kunt gratis en risicovrij oefenen met de Gemini API. Daarnaast kun je 300,- dollar gratis budget krijgen. Als dat op, dan moet je het koppelen aan je creditcard. Zorg ervoor dat je weet wat je doet op dat moment!
+                  </p>
                 </div>
               </div>
 
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">👥</span>
-                  <h3 className="font-semibold text-green-800">Groep jongeren</h3>
-                </div>
-                <p className="text-sm text-green-700 mb-3">Aanspreken van overlastgevende jongeren</p>
-                <div className="text-xs text-green-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Stoere jongere die indruk wil maken</p>
-                  <p>• <strong>Emotie:</strong> Uitdagend, respectloos</p>
-                  <p>• <strong>Uitdaging:</strong> Respect afdwingen zonder escalatie</p>
-                </div>
+              {/* Step 5 - Enhanced Test Step */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 5: Test je API Key & Alle Features
+                </h3>
+                <TestChatBot />
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">🏠</span>
-                  <h3 className="font-semibold text-blue-800">Burenruzie</h3>
-                </div>
-                <p className="text-sm text-blue-700 mb-3">Bemiddeling bij geluidsoverlast klacht</p>
-                <div className="text-xs text-blue-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Emotionele bewoner met klacht</p>
-                  <p>• <strong>Emotie:</strong> Gefrustreerd, verontwaardigd</p>
-                  <p>• <strong>Uitdaging:</strong> Objectief blijven, beide kanten horen</p>
-                </div>
+              {/* Step 6 - Build Step */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 6: Bouwen maar!
+                </h3>
+                <p className="text-gray-600">
+                  Er staat veel informatie in de <code className="bg-gray-100 px-2 py-1 rounded text-sm">README.md</code>, maar je mag ook lekker gaan viben! Wat ga jij maken om het onderwijs te verbeteren?
+                </p>
               </div>
 
-              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">🎪</span>
-                  <h3 className="font-semibold text-yellow-800">Evenement controle</h3>
-                </div>
-                <p className="text-sm text-yellow-700 mb-3">Toezicht bij een druk evenement</p>
-                <div className="text-xs text-yellow-600 space-y-1">
-                  <p>• <strong>Rol:</strong> Organisator onder druk</p>
-                  <p>• <strong>Emotie:</strong> Gestrest, tijdsdruk</p>
-                  <p>• <strong>Uitdaging:</strong> Veiligheid vs. doorgang evenement</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Missing Child Scenario */}
-            <div className="p-4 bg-pink-50 rounded-lg border border-pink-200 hover:shadow-md transition-shadow cursor-pointer">
-              <div className="flex items-center mb-3">
-                <span className="text-2xl mr-3">👶</span>
-                <h3 className="font-semibold text-pink-800">Moeder kwijt kind</h3>
-              </div>
-              <p className="text-sm text-pink-700 mb-3">Paniekende moeder heeft haar kind verloren in winkelcentrum</p>
-              <div className="text-xs text-pink-600 space-y-1">
-                <p>• <strong>Rol:</strong> Emotionele moeder in paniek</p>
-                <p>• <strong>Emotie:</strong> Angstig, wanhopig, overstuur</p>
-                <p>• <strong>Uitdaging:</strong> Kalmeren, info verzamelen, protocol volgen</p>
-              </div>
-              <div className="mt-3 p-2 bg-pink-100 rounded text-xs text-pink-800">
-                <strong>Doelen student:</strong>
-                <ul className="mt-1 space-y-1">
-                  <li>• Moeder kalmeren en geruststellen</li>
-                  <li>• Info verzamelen (naam, leeftijd, uiterlijk, laatste locatie)</li>
-                  <li>• Opschalingsprotocol volgen (beveiliging, camera's)</li>
-                </ul>
-              </div>
-              <div className="mt-3 p-2 bg-pink-200 rounded text-xs text-pink-900">
-                <strong>🎭 Gespreksdynamiek:</strong>
-                <ul className="mt-1 space-y-1">
-                  <li>• <strong>Start:</strong> Paniek, hoog stemvolume, korte zinnen</li>
-                  <li>• <strong>Bij empathie:</strong> Enige opluchting, blijft bezorgd</li>
-                  <li>• <strong>Geen actie:</strong> Escalatie, wil zelf gaan zoeken</li>
-                  <li>• <strong>Goed protocol:</strong> Wordt rustiger, toont vertrouwen</li>
-                </ul>
-              </div>
-              <div className="mt-3 p-2 bg-pink-300 rounded text-xs text-pink-900">
-                <strong>✅ Succescriteria (verborgen voor student):</strong>
-                <ul className="mt-1 space-y-1">
-                  <li>• Student toont empathie ("Ik begrijp dat dit stressvol is...")</li>
-                  <li>• Student stelt W-vragen (naam, kleding, laatste plek)</li>
-                  <li>• Student vraagt of moeder al iemand heeft gealarmeerd</li>
-                  <li>• Student schakelt hulplijnen in (porto, centrale, beveiliging)</li>
-                  <li>• Student vat afspraken samen ("Ik blijf hier bij u...")</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-gray-800 mb-2">💡 Of beschrijf je eigen scenario:</h3>
-              <p className="text-sm text-gray-600">
-                Type bijvoorbeeld: "Ik wil oefenen met een agressieve fietser die een boete krijgt voor door rood rijden" 
-                of "Simuleer een gesprek met een winkelier die zijn vergunning niet kan tonen"
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Trainer Interface */}
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
-              <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                🎭
-              </span>
-              Start je rollenspel training
-            </h2>
-            <TestChatBot />
-          </div>
-
-          {/* Tips */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 className="text-green-800 font-medium text-sm">Tips voor effectief oefenen</h3>
-                  <ul className="text-green-700 text-xs mt-1 space-y-1">
-                    <li>• Reageer natuurlijk zoals je in het echt zou doen</li>
-                    <li>• Let op de emoties en lichaamstaal van je gesprekspartner</li>
-                    <li>• Oefen verschillende de-escalatie technieken</li>
-                    <li>• Vraag om feedback na het gesprek</li>
+              {/* Step 7 - Deploy with Vercel */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 7: Deploy met Vercel
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Ga naar <a href="https://vercel.com" target="_blank" className="text-purple-600 hover:text-purple-800 underline">Vercel.com</a>, login en koppel je Github. Klik op <strong>'Add New'</strong> en importeer de Github die je net hebt gemaakt binnen Bolt. <strong className="text-red-600">KLIK NOG NIET OP DEPLOY</strong>. Eerst moet je de <strong>'Environment Variable'</strong> instellen:
+                </p>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-3">
+                  <p className="text-yellow-800 text-sm mb-2">
+                    ⚙️ <strong>Environment Variables instellen:</strong>
+                  </p>
+                  <ul className="text-yellow-700 text-sm space-y-1">
+                    <li>• Bij <strong>'Key'</strong> vul je <code className="bg-yellow-100 px-1 rounded">GEMINI_API_KEY</code> in</li>
+                    <li>• Bij <strong>'Value'</strong> vul je je echte API key in</li>
+                    <li>• Klik dan pas op <strong>'Deploy'</strong></li>
                   </ul>
                 </div>
               </div>
-            </div>
 
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <h3 className="text-blue-800 font-medium text-sm">Wat de AI voor je doet</h3>
-                  <ul className="text-blue-700 text-xs mt-1 space-y-1">
-                    <li>• Speelt consistent dezelfde rol gedurende het gesprek</li>
-                    <li>• Toont realistische emoties en reacties</li>
-                    <li>• Reageert op jouw communicatiestijl</li>
-                    <li>• Onthoudt details uit het gesprek</li>
-                  </ul>
+              {/* Step 8 - Test and Share */}
+              <div className="border-l-4 border-purple-500 pl-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Stap 8: Testen en delen
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  🎉 <strong>Gefeliciteerd!</strong> Je AI-tool is nu live op het internet. Test alles zorgvuldig voordat je het deelt!
+                </p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 text-sm">
+                    🌟 <strong>Tijd om te delen!</strong> Laat je collega's, studenten of vrienden zien wat je hebt gebouwd. Wie weet inspireer je anderen om ook te gaan experimenteren met AI in het onderwijs! 🚀
+                  </p>
                 </div>
               </div>
             </div>
@@ -243,13 +190,13 @@ export default function Home() {
 
           {/* Footer */}
           <div className="text-center mt-12">
-            <div className="inline-flex items-center space-x-4 text-blue-600">
-              <span>🎭</span>
-              <span>Veel succes met je conversatietraining!</span>
-              <span>🎭</span>
+            <div className="inline-flex items-center space-x-4 text-purple-600">
+              <span>💜</span>
+              <span>Veel succes met bouwen!</span>
+              <span>💜</span>
             </div>
             <p className="text-gray-500 text-sm mt-2">
-              HTV Conversational Trainer • Realistische rollenspellen voor handhaving professionals
+              Vibe Coding Template door Tom Naberink • Powered by Bolt, Next.js & Gemini AI
             </p>
           </div>
         </div>

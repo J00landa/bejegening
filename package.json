@@ -1,19 +1,13 @@
 {
-  "name": "htv-chatbot-assistant",
+  "name": "gemini-chatbot",
   "version": "0.1.0",
   "private": true,
-  "description": "AI-chatbot assistent voor HTV studenten - Handhaving, Toezicht en Veiligheid",
+  "description": "Een Next.js template met Gemini AI integratie, geoptimaliseerd voor Bolt + Netlify deployment",
   "keywords": [
     "nextjs",
     "gemini",
     "ai",
     "chatbot",
-    "htv",
-    "handhaving",
-    "toezicht",
-    "veiligheid",
-    "boa",
-    "onderwijs",
     "netlify",
     "bolt",
     "typescript"
