@@ -826,9 +826,16 @@ Geef feedback in deze structuur:
     
     if (!message.trim() && selectedFiles.length === 0) return
       const payload: any = { 
-        message, 
+        mes
+    }
+  }
+}sage, 
         useGrounding: aiModel === 'internet' ? useGrounding : false,
       const payload: any = { 
+        // Send ALL selected images for Gemini Vision
+        const selectedImages = selectedFiles.filter(file => file.type === 'image')
+        if (selectedImages.length > 0) {
+          payload.images = selectedImages.map(img => img.content)
         }
         
         // Add context from all selected files
