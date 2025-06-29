@@ -818,31 +818,26 @@ Geef feedback in deze structuur:
                 // Add token to streaming response
                 const newResponse = currentStreamingResponseRef.current + data.token
                 
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}currentStreamingResponseRef.current = newResponse
+                currentStreamingResponseRef.current = newResponse
                 setStreamingResponse(newResponse)
                 console.log('Streaming token:', data.token, 'Total length:', newResponse.length)
               }
+            } catch (error) {
+              console.error('Error parsing streaming data:', error)
             }
           }
         }
       }
-    }
-  }
-}urrentStreamingResponseRef.current = newResponse
-                setStreamingResponse(newResponse)
-                console.log('Streaming token:', data.token, 'Total length:', newResponse.length)
-              }
-            }
-          }
-        }
-      }
+    } catch (error) {
+      console.error('Streaming error:', error)
+      setIsStreaming(false)
+      setIsWaitingForStream(false)
+      setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown streaming error'}`)
+    } finally {
+      // Clean up
+      setMessage('')
+      setUploadedFiles(prev => prev.map(file => ({ ...file, selected: false })))
+      abortControllerRef.current = null
     }
   }
 
