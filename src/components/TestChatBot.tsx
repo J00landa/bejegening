@@ -827,7 +827,11 @@ Geef feedback in deze structuur:
     if (!message.trim() && selectedFiles.length === 0) return
       const payload: any = { 
         message, 
-        useGrounding: aiModel === 'internet' ? useGrounding : false,
+        useGrounding: aiModel === 'internet'
+      }
+    }
+  }
+} ? useGrounding : false,
       const payload: any = { 
           const fileType = file.type === 'image' ? 'Afbeelding' : 
                           file.type === 'document' ? 'Document' : 
