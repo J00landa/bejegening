@@ -825,30 +825,10 @@ Geef feedback in deze structuur:
     const selectedFiles = getSelectedFiles()
     
     if (!message.trim() && selectedFiles.length === 0) return
-
-    setIsLoading(true)
-    try {
-
-      }
-    }
-  }
-}      const payload: any = { 
-}      const payload: any = { 
+      const payload: any = { 
         message, 
         useGrounding: aiModel === 'internet' ? useGrounding : false,
-        aiModel 
-      }
-      
-      // Add selected files to payload
-      if (selectedFiles.length > 0) {
-        // Send ALL selected images for Gemini Vision
-        const selectedImages = selectedFiles.filter(file => file.type === 'image')
-        if (selectedImages.length > 0) {
-          payload.images = selectedImages.map(img => img.content)
-        }
-        
-        // Add context from all selected files
-        const fileContexts = selectedFiles.map((file, index) => {
+      const payload: any = { 
           const fileType = file.type === 'image' ? 'Afbeelding' : 
                           file.type === 'document' ? 'Document' : 
                           file.type === 'audio' ? 'Audio Transcriptie' : 'Data'
@@ -1119,65 +1099,263 @@ Geef feedback in deze structuur:
               {(response && response.startsWith('Error:')) ? (
                 <p className="text-gray-700 text-sm whitespace-pre-wrap">
                   {response}
-                </p>
-              ) : (
-                <div className="relative">
-                  <MarkdownRenderer 
-                    content={isStreaming ? streamingResponse : response} 
-                    className="text-gray-700 text-sm"
-                  />
-                  {isStreaming && (
-                    <span className="inline-block w-2 h-4 bg-pink-600 animate-pulse ml-1 align-text-bottom"></span>
-                  )}
-                </div>
-              )}
-            </div>
-            {(response && response.startsWith('Error:')) && (
-              <p className="text-red-600 text-xs mt-2">
-                Controleer of je API key correct is ingesteld in .env.local
-              </p>
-            )}
-            
-            {/* Response Actions - only show for successful responses */}
-            {!(response && response.startsWith('Error:')) && (
-              <ResponseActions 
-                content={isStreaming ? streamingResponse : response}
-                isMarkdown={true}
-                isStreaming={isStreaming}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept=".docx,.pdf,.txt,.md,.csv,.json,.jpg,.jpeg,.png,.gif,.webp,.bmp,image/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mpeg,.mpga,.webm,audio/*"
-          onChange={(e) => {
-            const files = e.target.files
-            if (files && files.length > 0) {
-              if (files.length === 1) {
-                handleFileUpload(files[0])
-              } else {
-                handleMultipleFileUpload(files)
-              }
-            }
-            // Reset input value to allow selecting the same files again
-            e.target.value = ''
-          }}
-          className="hidden"
-        />
-      </div>
-    </div>
-  )
-}
+    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-purple-800 flex items-center mb-4">
+        <span className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mr-2">
+          <span className="text-white text-sm">🎭</span>
         </span>
         HTV Conversational Trainer
       </h3>
       
       <div className="space-y-4">
+        {/* Saskia Scenario Section */}
+        <div className="bg-pink-50 border border-pink-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-pink-800 flex items-center">
+              <span className="w-6 h-6 bg-pink-600 rounded-full flex items-center justify-center mr-2">
+                <span className="text-white text-sm">👶</span>
+              </span>
+              Saskia Scenario: Moeder Kwijt Kind
+            </h3>
+            <div className="flex items-center space-x-2">
+              {conversationHistory.length > 0 && (
+                <span className="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded">
+                  {Math.floor(conversationHistory.length / 2)} gespreksbeurten
+                </span>
+              )}
+              {conversationHistory.length >= 2 && !showFeedback && (
+                <button
+                  onClick={requestFeedback}
+                  disabled={isLoading}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+                >
+                  📊 Vraag Feedback
+                </button>
+              )}
+              {conversationHistory.length > 0 && (
+                <button
+          {/* Feedback Section */}
+          {showFeedback && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+                  <span className="text-white text-sm">📊</span>
+                </span>
+                Professionele Feedback
+              </h4>
+              {isLoading && !feedbackResponse ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span className="text-blue-700 text-sm">Feedback wordt gegenereerd...</span>
+                </div>
+              ) : (
+                <div className="bg-white p-3 rounded border">
+                  <MarkdownRenderer 
+                    content={feedbackResponse} 
+                    className="text-blue-700 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+                  onClick={resetConversation}
+          {/* Conversation History Display */}
+          {conversationHistory.length > 0 && !showFeedback && (
+            <div className="mb-4 p-3 bg-white rounded-lg border border-pink-200 max-h-40 overflow-y-auto">
+              <h4 className="text-sm font-semibold text-pink-800 mb-2">📝 Gespreksverloop:</h4>
+              <div className="space-y-2">
+                {conversationHistory.map((turn, index) => (
+                  <div key={index} className={`text-xs p-2 rounded ${
+                    turn.speaker === 'Student' 
+                      ? 'bg-blue-50 border-l-2 border-blue-400' 
+                      : 'bg-pink-50 border-l-2 border-pink-400'
+                  }`}>
+                    <strong className={turn.speaker === 'Student' ? 'text-blue-700' : 'text-pink-700'}>
+                      {turn.speaker}:
+                    </strong>
+                    <span className="text-gray-700 ml-2">
+                      {turn.message.length > 100 ? turn.message.substring(0, 100) + '...' : turn.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+                  className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 transition-colors"
+          {/* Instructions for first message */}
+          {conversationHistory.length === 0 && !response && !streamingResponse && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                💡 <strong>Start het rollenspel:</strong> Typ bijvoorbeeld "Hallo, kan ik u helpen?" of "Goedemiddag, ik ben BOA Van der Berg. Wat is er aan de hand?"
+              </p>
+            </div>
+          )}
+                >
+          <div className="space-y-4">
+            {/* Input Area */}
+            <div className={`bg-white rounded-lg border transition-all duration-200 p-3 ${
+              isDragOver 
+                ? 'border-pink-500 border-2 bg-pink-50' 
+                : 'border-pink-200'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}>
+                  🔄 Nieuw Gesprek
+              {/* Drag & Drop Overlay */}
+              {isDragOver && (
+                <div className="absolute inset-2 border-2 border-dashed border-pink-400 rounded-lg bg-pink-50 bg-opacity-90 flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">📁</div>
+                    <p className="text-pink-700 font-semibold">Drop bestanden of tekst hier</p>
+                    <p className="text-pink-600 text-sm">Afbeeldingen, documenten, of URLs</p>
+                  </div>
+                </div>
+              )}
+                </button>
+              <div className="flex items-end space-x-2">
+                {/* Text Input */}
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={isDragOver ? "Drop bestanden of tekst hier..." : isFirstMessage() ? "Begin het gesprek als BOA... (bijv: 'Goedemiddag, ik ben BOA Van der Berg. Kan ik u helpen?')" : "Reageer op Saskia..."}
+                    className="w-full p-2 border-0 resize-none focus:outline-none"
+                    rows={2}
+                    disabled={isLoading || showFeedback}
+                  />
+                  {pasteHint && (
+                    <div className="absolute top-0 right-0 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-bl-lg rounded-tr-lg">
+                      {pasteHint}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2">
+                  {/* Send Button */}
+                  <button
+                    onClick={sendMessageStreaming}
+                    disabled={(isLoading || isStreaming || isWaitingForStream || showFeedback) || (!message.trim() && getSelectedFiles().length === 0)}
+                    className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isWaitingForStream ? '🤔' : isStreaming ? '💭' : isLoading ? '⏳' : '🚀'}
+                  </button>
+                </div>
+              </div>
+            </div>
+              )}
+            {/* Response Area */}
+            {isWaitingForStream && (
+              <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
+                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  </div>
+                  <span className="text-pink-700 font-medium">👶 Saskia denkt na over je reactie...</span>
+                </div>
+                <p className="text-pink-600 text-sm mt-2 ml-12">Ze gaat reageren vanuit haar emotionele toestand... ✨</p>
+              </div>
+            )}
+            
+            {isLoading && !isStreaming && !isWaitingForStream && (
+              <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                  <span className="text-pink-700 text-sm">Saskia reageert...</span>
+                </div>
+              </div>
+            )}
+            </div>
+            {(response || streamingResponse || isStreaming) && !isLoading && !isWaitingForStream && !showFeedback && (
+              <div className={`p-4 rounded-lg ${
+                (response && response.startsWith('Error:')) 
+                  ? 'bg-red-50 border border-red-200' 
+                  : 'bg-green-50 border border-green-200'
+              }`}>
+                <p className={`text-sm font-medium mb-2 ${
+                  (response && response.startsWith('Error:')) 
+                    ? 'text-red-800' 
+                    : 'text-green-800'
+                }`}>
+                  <span className="flex items-center">
+                    {(response && response.startsWith('Error:')) ? (
+                      <>❌ Fout:</>
+                    ) : (
+                      <>
+                        <span className={`w-3 h-3 rounded-full mr-2 ${
+                          isStreaming ? 'bg-pink-600 animate-pulse' : 'bg-green-600'
+                        }`}></span>
+                        {isStreaming ? '🎭 Saskia reageert live:' : '👶 Saskia zegt:'}
+                      </>
+                    )}
+                  </span>
+                </p>
+                <div className="bg-white p-3 rounded border relative">
+                  {(response && response.startsWith('Error:')) ? (
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                      {response}
+                    </p>
+                  ) : (
+                    <div className="relative">
+                      <MarkdownRenderer 
+                        content={isStreaming ? streamingResponse : response} 
+                        className="text-gray-700 text-sm"
+                      />
+                      {isStreaming && (
+                        <span className="inline-block w-2 h-4 bg-pink-600 animate-pulse ml-1 align-text-bottom"></span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {(response && response.startsWith('Error:')) && (
+                  <p className="text-red-600 text-xs mt-2">
+                    Controleer of je API key correct is ingesteld in .env.local
+                  </p>
+                )}
+                
+                {/* Response Actions - only show for successful responses */}
+                {!(response && response.startsWith('Error:')) && (
+                  <ResponseActions 
+                    content={isStreaming ? streamingResponse : response}
+                    isMarkdown={true}
+                    isStreaming={isStreaming}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".docx,.pdf,.txt,.md,.csv,.json,.jpg,.jpeg,.png,.gif,.webp,.bmp,image/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mpeg,.mpga,.webm,audio/*"
+              onChange={(e) => {
+                const files = e.target.files
+                if (files && files.length > 0) {
+                  if (files.length === 1) {
+                    handleFileUpload(files[0])
+                  } else {
+                    handleMultipleFileUpload(files)
+                  }
+                }
+                // Reset input value to allow selecting the same files again
+                e.target.value = ''
+              }}
+              className="hidden"
+            />
+          </div>
+        </div>
+
         {/* File Manager */}
         {uploadedFiles.length > 0 && (
           <div className="bg-white rounded-lg border border-purple-200 p-4">
@@ -1268,7 +1446,7 @@ Geef feedback in deze structuur:
             </div>
           </div>
         )}
-
+          {/* Scenario Instructions */}
         {/* AI Model Selection Cards */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
           <h3 className="text-gray-800 font-medium mb-3">
@@ -1309,7 +1487,7 @@ Geef feedback in deze structuur:
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
-
+          <div className="mb-4 p-3 bg-pink-100 rounded-lg border border-pink-200">
             {/* Smart Model */}
             <div 
               className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all group hover:shadow-lg hover:scale-105 ${
@@ -1343,7 +1521,7 @@ Geef feedback in deze structuur:
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
-
+            <h4 className="text-sm font-semibold text-pink-800 mb-2">🎯 Jouw rol als BOA/Handhaver:</h4>
             {/* Internet Model */}
             <div 
               className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all group hover:shadow-lg hover:scale-105 ${
@@ -1379,10 +1557,8 @@ Geef feedback in deze structuur:
               </div>
             </div>
           </div>
-
-
         </div>
-
+            <ul className="text-xs text-pink-700 space-y-1">
         {/* Input Area */}
         <div className={`bg-white rounded-lg border transition-all duration-200 p-3 ${
           isDragOver 
@@ -1392,8 +1568,7 @@ Geef feedback in deze structuur:
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}>
-
-
+              <li>• <strong>Kalmeer</strong> de moeder en toon empathie</li>
           {/* Drag & Drop Overlay */}
           {isDragOver && (
             <div className="absolute inset-2 border-2 border-dashed border-purple-400 rounded-lg bg-purple-50 bg-opacity-90 flex items-center justify-center z-10">
@@ -1404,7 +1579,7 @@ Geef feedback in deze structuur:
               </div>
             </div>
           )}
-
+              <li>• <strong>Verzamel info:</strong> naam kind, leeftijd, uiterlijke kenmerken, laatste locatie</li>
           <div className="flex items-end space-x-2">
             {/* Text Input */}
             <div className="flex-1 relative">
@@ -1487,9 +1662,7 @@ Geef feedback in deze structuur:
             </div>
           )}
         </div>
-
-
-
+              <li>• <strong>Volg protocol:</strong> schakel beveiliging in, vraag om camera's, coördineer zoekactie</li>
         {/* Response Area */}
         {isWaitingForStream && (
           <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
@@ -1517,7 +1690,7 @@ Geef feedback in deze structuur:
             </div>
           </div>
         )}
-
+              <li>• <strong>Communiceer:</strong> houd de moeder op de hoogte van je acties</li>
         {(response || streamingResponse || isStreaming) && !isLoading && !isWaitingForStream && (
           <div className={`p-4 rounded-lg ${
             (response && response.startsWith('Error:')) 
@@ -1576,7 +1749,7 @@ Geef feedback in deze structuur:
                 isStreaming={isStreaming}
               />
             )}
-
+            </ul>
             {/* Grounding Sources - show if available */}
             {groundingData && groundingData.isGrounded && !isStreaming && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1628,16 +1801,15 @@ Geef feedback in deze structuur:
                 )}
               </div>
             )}
-
           </div>
         )}
-
+          </div>
         {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
           multiple
-                      accept=".docx,.pdf,.txt,.md,.csv,.json,.jpg,.jpeg,.png,.gif,.webp,.bmp,image/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mpeg,.mpga,.webm,audio/*"
+          accept=".docx,.pdf,.txt,.md,.csv,.json,.jpg,.jpeg,.png,.gif,.webp,.bmp,image/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mpeg,.mpga,.webm,audio/*"
           onChange={(e) => {
             const files = e.target.files
             if (files && files.length > 0) {
