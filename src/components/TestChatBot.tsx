@@ -828,11 +828,7 @@ Geef feedback in deze structuur:
 
     setIsLoading(true)
     try {
-
-      }
-    }
-  }
-}      const payload: any = { 
+      const payload: any = { 
 }      const payload: any = { 
         message, 
         useGrounding: aiModel === 'internet' ? useGrounding : false,
