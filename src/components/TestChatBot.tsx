@@ -825,13 +825,22 @@ Geef feedback in deze structuur:
     const selectedFiles = getSelectedFiles()
     
     if (!message.trim() && selectedFiles.length === 0) return
-      const payload: any = { 
-        mes
+
+    setIsLoading(true)
+    try {
+
+      }
     }
   }
-}sage, 
+}      const payload: any = { 
+}      const payload: any = { 
+        message, 
         useGrounding: aiModel === 'internet' ? useGrounding : false,
-      const payload: any = { 
+        aiModel 
+      }
+      
+      // Add selected files to payload
+      if (selectedFiles.length > 0) {
         // Send ALL selected images for Gemini Vision
         const selectedImages = selectedFiles.filter(file => file.type === 'image')
         if (selectedImages.length > 0) {
