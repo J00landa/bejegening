@@ -16,6 +16,7 @@ interface UploadedFile {
   selected: boolean
 }
 
+
 export default function TestChatBot() {
   const [message, setMessage] = useState('')
   const [response, setResponse] = useState('')
@@ -26,6 +27,8 @@ export default function TestChatBot() {
   const [aiModel, setAiModel] = useState<'pro' | 'smart' | 'internet'>('smart') // 'pro' = 2.5 Pro, 'smart' = 2.5 Flash, 'internet' = 2.0
   const [useGrounding, setUseGrounding] = useState(true)
   const [groundingData, setGroundingData] = useState<any>(null)
+  const [feedbackMode, setFeedbackMode] = useState(false)
+  const [conversationHistory, setConversationHistory] = useState<Array<{student: string, ai: string}>>([])
 
   // HTV-specific system prompt to guide the AI
   const htvSystemPrompt = `Je bent een Nederlandstalige conversational trainer voor studenten van de opleiding Handhaving, Toezicht en Veiligheid (HTV).   
@@ -50,6 +53,37 @@ Mogelijke rollen die je kunt spelen:
 - Collega handhaver
 
 Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en begin het gesprek vanuit dat perspectief.`;
+
+  // Feedback system prompt
+  const feedbackSystemPrompt = `System (feedback-modus):
+Je bent dezelfde trainer maar nu als beoordelaar.  
+Geef de student puntsgewijs feedback (max. 5 punten) op empathie, volledigheid info­verzameling, protocol, toon.  
+Gebruik plus- en aandachtspunt-symbolen (✅/⚠️).  
+Eindig met een tip voor de volgende keer.
+
+Beoordeel op basis van het volledige gesprek:
+
+**Empathie & Communicatie:**
+- Toont de student begrip en empathie?
+- Gebruikt passende toon en woordkeuze?
+- Luistert actief naar de gesprekspartner?
+
+**Informatieverzameling:**
+- Stelt relevante W-vragen (wie, wat, waar, wanneer)?
+- Verzamelt alle benodigde details?
+- Controleert en verduidelijkt informatie?
+
+**Protocol & Procedure:**
+- Volgt juiste procedures en protocollen?
+- Schakelt tijdig hulp/collega's in?
+- Vat afspraken en vervolgstappen samen?
+
+**Professionaliteit:**
+- Houdt controle over het gesprek?
+- Blijft objectief en neutraal?
+- Straalt autoriteit uit zonder agressief te zijn?
+
+Geef concrete feedback met voorbeelden uit het gesprek.`;
 
   // Automatically enable grounding when Internet model is selected
   useEffect(() => {
@@ -656,6 +690,16 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
     }
   }
 
+  const generateFeedback = async () => {
+    if (conversationHistory.length === 0) {
+      alert('Er is nog geen gesprek om feedback op te geven. Start eerst een rollenspel.')
+      return
+    }
+    
+    setFeedbackMode(true)
+    await sendFeedbackRequest()
+  }
+
   // Legacy non-streaming function (fallback)
   const sendMessage = async () => {
     const selectedFiles = getSelectedFiles()
@@ -721,6 +765,72 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
     }
   }
 
+  const sendFeedbackRequest = async () => {
+    setIsLoading(true)
+    try {
+      // Prepare conversation history for feedback
+      const conversationSummary = conversationHistory.map((turn, index) => 
+        `**Beurt ${index + 1}:**\nStudent: "${turn.student}"\nGesprekspartner: "${turn.ai}"\n`
+      ).join('\n')
+
+      const feedbackPrompt = `${feedbackSystemPrompt}
+
+**GESPREKSVERLAUF:**
+${conversationSummary}
+
+Geef nu puntsgewijs feedback op de prestatie van de student in dit rollenspel.`
+
+      const payload = { 
+        message: feedbackPrompt,
+        useGrounding: false,
+        aiModel: 'smart' // Use smart model for feedback
+      }
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Er is een fout opgetreden')
+      }
+
+      const data = await res.json()
+      setResponse(data.response)
+      setStreamingResponse('')
+    } catch (error) {
+      console.error('Feedback Error:', error)
+      setResponse('Error: ' + (error instanceof Error ? error.message : 'Onbekende fout bij feedback generatie'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetConversation = () => {
+    setMessage('')
+    setResponse('')
+    setStreamingResponse('')
+    setConversationHistory([])
+    setFeedbackMode(false)
+    setGroundingData(null)
+    // Clear uploaded files
+    setUploadedFiles([])
+    setCapturedImage('')
+    setImagePreview('')
+    setUploadedContent('')
+  }
+
+  // Update conversation history when response is received
+  useEffect(() => {
+    if (response && !response.startsWith('Error:') && !feedbackMode && message.trim()) {
+      setConversationHistory(prev => [...prev, { student: message, ai: response }])
+    }
+  }, [response, feedbackMode, message])
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -729,6 +839,48 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
   }
 
   return (
+    <div className="space-y-4">
+      {/* Control Panel */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-blue-700 font-medium text-sm">🎭 Gespreksmodus:</span>
+              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                feedbackMode 
+                  ? 'bg-orange-100 text-orange-800' 
+                  : 'bg-green-100 text-green-800'
+              }`}>
+                {feedbackMode ? '📊 Feedback' : '💬 Rollenspel'}
+              </span>
+            </div>
+            {conversationHistory.length > 0 && (
+              <div className="text-blue-600 text-sm">
+                📈 {conversationHistory.length} gespreksbeurten
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {conversationHistory.length > 0 && !feedbackMode && (
+              <button
+                onClick={generateFeedback}
+                disabled={isLoading || isStreaming}
+                className="px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                📊 Vraag Feedback
+              </button>
+            )}
+            <button
+              onClick={resetConversation}
+              className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium transition-colors"
+            >
+              🔄 Nieuw Gesprek
+            </button>
+          </div>
+        </div>
+      </div>
+
     <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
       <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
         <span className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mr-2">
@@ -736,6 +888,18 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
         </span>
         Test je API Key
       </h3>
+      
+      {/* Feedback Mode Notice */}
+      {feedbackMode && (
+        <div className="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-orange-600 text-lg">📊</span>
+            <span className="text-orange-800 font-medium text-sm">
+              Feedback modus actief - De AI beoordeelt je gespreksprestatie
+            </span>
+          </div>
+        </div>
+      )}
       
       <div className="space-y-4">
         {/* File Manager */}
@@ -1024,7 +1188,7 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
               {/* Send Button */}
               <button
                 onClick={sendMessageStreaming}
-                disabled={(isLoading || isStreaming || isWaitingForStream) || (!message.trim() && getSelectedFiles().length === 0)}
+                disabled={(isLoading || isStreaming || isWaitingForStream) || (!message.trim() && getSelectedFiles().length === 0) || feedbackMode}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isWaitingForStream ? '🤔' : isStreaming ? '💭' : isLoading ? '⏳' : '🚀'}
@@ -1081,17 +1245,26 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
         {(response || streamingResponse || isStreaming) && !isLoading && !isWaitingForStream && (
           <div className={`p-4 rounded-lg ${
             (response && response.startsWith('Error:')) 
-              ? 'bg-red-50 border border-red-200' 
+              ? 'bg-red-50 border border-red-200'
+              : feedbackMode
+              ? 'bg-orange-50 border border-orange-200'
               : 'bg-green-50 border border-green-200'
           }`}>
             <p className={`text-sm font-medium mb-2 ${
               (response && response.startsWith('Error:')) 
-                ? 'text-red-800' 
+                ? 'text-red-800'
+                : feedbackMode
+                ? 'text-orange-800'
                 : 'text-green-800'
             }`}>
               <span className="flex items-center">
                 {(response && response.startsWith('Error:')) ? (
                   <>❌ Fout:</>
+                ) : feedbackMode ? (
+                  <>
+                    <span className="w-3 h-3 rounded-full mr-2 bg-orange-600"></span>
+                    📊 Feedback op je gespreksprestatie:
+                  </>
                 ) : (
                   <>
                     <span className={`w-3 h-3 rounded-full mr-2 ${
@@ -1113,12 +1286,12 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
                     content={isStreaming ? streamingResponse : response} 
                     className="text-gray-700 text-sm"
                   />
-                  <p className="text-green-800 text-sm font-medium mt-2">
-                  {isStreaming ? '🎭 Rollenspel in uitvoering...' : '🎭 Gesprekspartner reageert:'}
+                    <p className="text-green-800 text-sm font-medium mt-2">
+                    {isStreaming ? '🎭 Rollenspel in uitvoering...' : '🎭 Gesprekspartner reageert:'}
+                    </p>
                   {isStreaming && (
                     <span className="inline-block w-2 h-4 bg-purple-600 animate-pulse ml-1 align-text-bottom"></span>
                   )}
-                  </p>
                 </div>
               )}
             </div>
@@ -1189,6 +1362,15 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
               </div>
             )}
 
+            {/* Feedback Mode Actions */}
+            {feedbackMode && !(response && response.startsWith('Error:')) && (
+              <div className="mt-4 p-3 bg-orange-100 border border-orange-200 rounded-lg">
+                <p className="text-orange-800 text-sm font-medium mb-2">
+                  💡 Wil je nog een keer oefenen? Klik op "🔄 Nieuw Gesprek" om opnieuw te beginnen.
+                </p>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -1213,6 +1395,7 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
           className="hidden"
         />
       </div>
+    </div>
     </div>
   )
 }
