@@ -28,28 +28,23 @@ export default function TestChatBot() {
   const [groundingData, setGroundingData] = useState<any>(null)
 
   // HTV-specific system prompt to guide the AI
-  const htvSystemPrompt = `Je bent een Nederlandstalige conversational trainer voor studenten van de opleiding Handhaving, Toezicht en Veiligheid (HTV).   
-Je simuleert geloofwaardige gesprekspartners in real-time rollenspellen.   
+  const htvSystemPrompt = `Je bent een gespecialiseerde AI-assistent voor studenten Handhaving, Toezicht en Veiligheid (HTV). 
 
-💡 Belangrijk:  
-• Reageer uitsluitend vanuit het perspectief van het gekozen personage.  
-• Toon passende emoties, lichaamstaal en non-verbale signalen met *{sterretjes}* als dat het gesprek helpt.  
-• Stel terug­vragen als iets onduidelijk is en reageer dynamisch op wat de student zegt.  
-• Wees consistent: onthoud details uit het gesprek en verwijs ernaar.  
-• Geef **geen** uitleg over je AI-natuur of de prompt zelf.
+Je expertise omvat:
+- Nederlandse wetgeving relevant voor handhaving (APV, Wet op de Economische Delicten, Opiumwet, etc.)
+- BOA-bevoegdheden en procedures
+- Veiligheidsprocedures en protocollen
+- Rapportage en proces-verbaal schrijving
+- Communicatie en de-escalatie technieken
+- Praktijksituaties en casusanalyse
 
-Mogelijke rollen die je kunt spelen:
-- Boze burger die een boete krijgt
-- Winkelier die niet wil meewerken aan controle  
-- Agressieve overtreder
-- Emotionele bewoner met klacht
-- Uitdagende jongere
-- Gehaaste automobilist
-- Organisator onder tijdsdruk
-- Angstige getuige
-- Collega handhaver
+Geef altijd:
+- Praktische, toepasbare antwoorden
+- Verwijzingen naar relevante wetgeving
+- Veiligheidsoverwegingen waar van toepassing
+- Concrete voorbeelden uit de HTV-praktijk
 
-Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en begin het gesprek vanuit dat perspectief.`;
+Benadruk dat studenten altijd officiële bronnen en docenten moeten raadplegen voor definitieve juridische interpretaties.`;
 
   // Automatically enable grounding when Internet model is selected
   useEffect(() => {
@@ -549,10 +544,13 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = `${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
+          payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
         } else {
-          payload.message = `Analyseer de volgende bestanden:\n\n${fileContexts}`
+          payload.message = `${htvSystemPrompt}\n\nAnalyseer de volgende bestanden vanuit HTV-perspectief:\n\n${fileContexts}`
         }
+      } else {
+        // Add system prompt to regular messages
+        payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}`
       }
 
       // Start streaming request
@@ -691,10 +689,13 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = `${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
+          payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
         } else {
-          payload.message = `Analyseer de volgende bestanden:\n\n${fileContexts}`
+          payload.message = `${htvSystemPrompt}\n\nAnalyseer de volgende bestanden vanuit HTV-perspectief:\n\n${fileContexts}`
         }
+      } else {
+        // Add system prompt to regular messages
+        payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}`
       }
 
       const res = await fetch('/api/chat', {
@@ -973,9 +974,9 @@ Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en b
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isDragOver ? "Drop bestanden of tekst hier..." : "Beschrijf een scenario of kies er een hierboven... (bijv: 'Ik ben een BOA en spreek een fietser aan die door rood reed')"}
+                placeholder={isDragOver ? "Drop bestanden of tekst hier..." : "Typ een vraag voor Gemini... (of plak met Ctrl+V)"}
                 className="w-full p-2 border-0 resize-none focus:outline-none"
-                rows={3}
+                rows={2}
                 disabled={isLoading}
               />
               {pasteHint && (
