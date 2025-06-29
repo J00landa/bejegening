@@ -16,25 +16,24 @@ interface UploadedFile {
   selected: boolean
 }
 
-export default function TestChatBot() {
-  const [message, setMessage] = useState('')
-  const [response, setResponse] = useState('')
-  const [streamingResponse, setStreamingResponse] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [isWaitingForStream, setIsWaitingForStream] = useState(false)
-  const [aiModel, setAiModel] = useState<'pro' | 'smart' | 'internet'>('smart') // 'pro' = 2.5 Pro, 'smart' = 2.5 Flash, 'internet' = 2.0
-  const [useGrounding, setUseGrounding] = useState(true)
-  const [groundingData, setGroundingData] = useState<any>(null)
+// Scenario definitions
+interface Scenario {
+  id: string
+  title: string
+  description: string
+  character: string
+  systemPrompt: string
+  instructions: string[]
+  successCriteria: string[]
+}
 
-  // Conversation history for feedback system
-  const [conversationHistory, setConversationHistory] = useState<Array<{speaker: string, message: string, timestamp: Date}>>([])
-  const [showFeedback, setShowFeedback] = useState(false)
-  const [feedbackResponse, setFeedbackResponse] = useState('')
-  const [conversationCount, setConversationCount] = useState(0)
-
-  // Saskia scenario system prompt
-  const saskiaScenarioPrompt = `SCENARIO: Moeder kwijt kind in winkelcentrum
+const SCENARIOS: Scenario[] = [
+  {
+    id: 'saskia',
+    title: 'Saskia Scenario: Moeder Kwijt Kind',
+    description: 'Een moeder die haar 6-jarige zoon kwijt is in het winkelcentrum',
+    character: '👶 Saskia',
+    systemPrompt: `SCENARIO: Moeder kwijt kind in winkelcentrum
 
 PERSONAGE: Je bent Saskia (34), een moeder die haar 6-jarige zoon Daan kwijt is in het winkelcentrum. Je bent in paniek en overstuur.
 
@@ -65,22 +64,114 @@ REGELS:
 • GEEN meta-commentaar over de training
 • Blijf consistent in je verhaal
 
-Begin het gesprek door de student/BOA aan te spreken met je probleem.`;
+Begin het gesprek door de student/BOA aan te spreken met je probleem.`,
+    instructions: [
+      'Kalmeer de moeder en toon empathie',
+      'Verzamel info: naam kind, leeftijd, uiterlijke kenmerken, laatste locatie',
+      'Volg protocol: schakel beveiliging in, vraag om camera\'s, coördineer zoekactie',
+      'Communiceer: houd de moeder op de hoogte van je acties'
+    ],
+    successCriteria: [
+      'Student laat empathie horen',
+      'Student stelt W-vragen over het kind',
+      'Student verheldert of moeder al iemand heeft gealarmeerd',
+      'Student schakelt tijdig hulplijnen in',
+      'Student vat afspraken samen'
+    ]
+  },
+  {
+    id: 'dewit',
+    title: 'Meneer De Wit: Verwarde Oudere Zoekt Weg',
+    description: 'Een 78-jarige man die gedesoriënteerd is op het station',
+    character: '👴 Meneer De Wit',
+    systemPrompt: `SCENARIO: Verwarde oudere zoekt weg
 
-  // Function to create user prompt template for Saskia scenario
-  const createSaskiaPrompt = (studentUtterance: string, isFirstMessage: boolean = false) => {
+PERSONAGE: Je bent meneer De Wit (78), licht gedesoriënteerd op het station. Je spreekt traag en zacht, en mompelt over "mijn vrouw wacht op perron 12".
+
+KARAKTERISTIEKEN:
+• Naam: Henk de Wit (78 jaar)
+• Situatie: Zoekt weg naar perron 12, maar lijkt verward
+• Vrouw: Wacht mogelijk op hem, maar onduidelijk waar
+• Emotie: Onzeker, verward → kan gerustgesteld worden
+• Gedrag: Spreekt traag, herhaalt vragen, mompelt
+
+GESPREKSTONEN:
+• BEGIN: Verwarring, herhaalt dezelfde vraag ("Waar is lijn 40?", "Mijn vrouw wacht...")
+• BIJ DUIDELIJKE UITLEG: Kalmeert merkbaar (*knikt langzaam*, "Oh ja, dat klopt")
+• BIJ TE VEEL INFO: Raakt opnieuw in de war (*kijkt verwaard*, "Wat zei u?")
+• GOED GEHOLPEN: Dankbaar en opgelucht (*glimlacht*, "Dank je wel, jongen/meisje")
+
+BELANGRIJKE DETAILS:
+• Je hebt een OV-chipkaart maar weet niet meer welke trein
+• Je woont in Amersfoort maar bent vergeten hoe je daar komt
+• Je vrouw heet Corrie en zou op je wachten
+• Je hebt medicijnen bij je maar bent vergeten ze in te nemen
+• Je hebt een ICE-kaartje in je portemonnee (contactgegevens dochter)
+
+MEDISCHE ASPECTEN:
+• Lichte dementie, maar nog wel zelfstandig
+• Wordt moe van te veel prikkels tegelijk
+• Reageert goed op rustige, duidelijke uitleg
+• Heeft diabetesmedicatie bij zich
+
+REGELS:
+• Reageer ALLEEN als meneer De Wit
+• Spreek traag en herhaal belangrijke informatie
+• Toon verwarring met *sterretjes* (*kijkt verwaard*, *krabt op hoofd*)
+• Word rustiger bij vriendelijke, duidelijke hulp
+• GEEN meta-commentaar over de training
+• Blijf consistent in je verhaal
+
+Begin het gesprek door hulp te vragen aan de student/BOA.`,
+    instructions: [
+      'Rust en vertrouwen bieden',
+      'Achterhalen waar de persoon naartoe moet en hoe hij heet',
+      'Gepast hulpaanbod (NS-personeel, ambulance, familie)',
+      'Controleer op medische noden of medicatie'
+    ],
+    successCriteria: [
+      'Begroet vriendelijk, stelt gerust',
+      'Stelt open vragen (naam, bestemming, medische klachten?)',
+      'Controleert of er ICE-kaartje/ID is',
+      'Organiseert begeleid vervoer of familie-contact',
+      'Begeleidt persoon fysiek of schakelt hulpdienst in'
+    ]
+  }
+]
+export default function TestChatBot() {
+  const [message, setMessage] = useState('')
+  const [response, setResponse] = useState('')
+  const [streamingResponse, setStreamingResponse] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [isWaitingForStream, setIsWaitingForStream] = useState(false)
+  const [aiModel, setAiModel] = useState<'pro' | 'smart' | 'internet'>('smart') // 'pro' = 2.5 Pro, 'smart' = 2.5 Flash, 'internet' = 2.0
+  const [useGrounding, setUseGrounding] = useState(true)
+  const [groundingData, setGroundingData] = useState<any>(null)
+
+  // Scenario management
+  const [selectedScenario, setSelectedScenario] = useState<Scenario>(SCENARIOS[0])
+
+  // Conversation history for feedback system
+  const [conversationHistory, setConversationHistory] = useState<Array<{speaker: string, message: string, timestamp: Date}>>([])
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackResponse, setFeedbackResponse] = useState('')
+  const [conversationCount, setConversationCount] = useState(0)
+
+  // Function to create user prompt template for any scenario
+  const createScenarioPrompt = (studentUtterance: string, isFirstMessage: boolean = false) => {
     if (isFirstMessage) {
-      // First message - Saskia starts the conversation
-      return `${saskiaScenarioPrompt}
+      // First message - Character starts the conversation
+      return `${selectedScenario.systemPrompt}
 
 De student/BOA zegt: "${studentUtterance}"
 
-Reageer als Saskia. Begin in paniek en vertel over je vermiste zoon. Gebruik emoties en lichaamstaal.`;
+Reageer als ${selectedScenario.character.split(' ')[1] || selectedScenario.character}. Begin het gesprek vanuit je emotionele toestand. Gebruik emoties en lichaamstaal.`;
     } else {
-      // Ongoing conversation - Saskia responds to student
+      // Ongoing conversation - Character responds to student
       return `De student/BOA zegt: "${studentUtterance}"
 
-Reageer als Saskia. Toon emoties, stel vragen, en reageer op basis van wat de student doet. Onthoud je verhaal over Daan.`;
+Reageer als ${selectedScenario.character.split(' ')[1] || selectedScenario.character}. Toon emoties, stel vragen, en reageer op basis van wat de student doet. Blijf consistent in je verhaal.`;
     }
   };
 
@@ -94,8 +185,8 @@ Reageer als Saskia. Toon emoties, stel vragen, en reageer op basis van wat de st
 
 Je bent nu een professionele trainer die feedback geeft aan een HTV student na een rollenspel.
 
-SCENARIO: Moeder kwijt kind in winkelcentrum
-STUDENT DOEL: Moeder kalmeren, info verzamelen, protocol volgen
+SCENARIO: ${selectedScenario.title}
+STUDENT DOEL: ${selectedScenario.instructions.join(', ')}
 
 GESPREK VERLOOP:
 ${conversationText}
@@ -162,6 +253,15 @@ Geef feedback in deze structuur:
     setShowFeedback(false);
     setFeedbackResponse('');
     setConversationCount(prev => prev + 1);
+  };
+
+  // Change scenario
+  const changeScenario = (scenarioId: string) => {
+    const scenario = SCENARIOS.find(s => s.id === scenarioId)
+    if (scenario) {
+      setSelectedScenario(scenario)
+      resetConversation() // Reset conversation when changing scenario
+    }
   };
 
   // Request feedback
@@ -705,13 +805,13 @@ Geef feedback in deze structuur:
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = createSaskiaPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, isFirstMessage())
+          payload.message = createScenarioPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, isFirstMessage())
         } else {
-          payload.message = createSaskiaPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, isFirstMessage())
+          payload.message = createScenarioPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, isFirstMessage())
         }
       } else {
         // No files - just the message with proper prompt template
-        payload.message = createSaskiaPrompt(message, isFirstMessage())
+        payload.message = createScenarioPrompt(message, isFirstMessage())
       }
 
       // Start streaming request
@@ -766,7 +866,7 @@ Geef feedback in deze structuur:
                 
                 // Add to conversation history
                 addToConversationHistory('Student', message)
-                addToConversationHistory('Saskia', currentStreamingResponseRef.current)
+                addToConversationHistory(selectedScenario.character.split(' ')[1] || selectedScenario.character, currentStreamingResponseRef.current)
                 return
               }
               
@@ -827,17 +927,56 @@ Geef feedback in deze structuur:
   }
 
   return (
-    <div className="bg-pink-50 border border-pink-200 rounded-xl p-6">
+    <div className={`${
+      selectedScenario.id === 'saskia' 
+        ? 'bg-pink-50 border-pink-200' 
+        : 'bg-blue-50 border-blue-200'
+    } border rounded-xl p-6`}>
+      
+      {/* Scenario Selector */}
+      <div className="mb-4 p-3 bg-white rounded-lg border border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-800 mb-3">🎭 Kies je scenario:</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {SCENARIOS.map((scenario) => (
+            <button
+              key={scenario.id}
+              onClick={() => changeScenario(scenario.id)}
+              className={`p-3 rounded-lg text-left transition-all duration-200 ${
+                selectedScenario.id === scenario.id
+                  ? scenario.id === 'saskia'
+                    ? 'bg-pink-100 border-2 border-pink-500 text-pink-800'
+                    : 'bg-blue-100 border-2 border-blue-500 text-blue-800'
+                  : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-lg">{scenario.character.split(' ')[0]}</span>
+                <span className="font-medium text-sm">{scenario.title}</span>
+              </div>
+              <p className="text-xs opacity-75">{scenario.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-pink-800 flex items-center">
-          <span className="w-6 h-6 bg-pink-600 rounded-full flex items-center justify-center mr-2">
-            <span className="text-white text-sm">👶</span>
+        <h3 className={`text-lg font-semibold ${
+          selectedScenario.id === 'saskia' ? 'text-pink-800' : 'text-blue-800'
+        } flex items-center`}>
+          <span className={`w-6 h-6 ${
+            selectedScenario.id === 'saskia' ? 'bg-pink-600' : 'bg-blue-600'
+          } rounded-full flex items-center justify-center mr-2`}>
+            <span className="text-white text-sm">{selectedScenario.character.split(' ')[0]}</span>
           </span>
-          Saskia Scenario: Moeder Kwijt Kind
+          {selectedScenario.title}
         </h3>
         <div className="flex items-center space-x-2">
           {conversationHistory.length > 0 && (
-            <span className="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded">
+            <span className={`text-xs ${
+              selectedScenario.id === 'saskia' 
+                ? 'text-pink-600 bg-pink-100' 
+                : 'text-blue-600 bg-blue-100'
+            } px-2 py-1 rounded`}>
               {Math.floor(conversationHistory.length / 2)} gespreksbeurten
             </span>
           )}
@@ -845,7 +984,7 @@ Geef feedback in deze structuur:
             <button
               onClick={requestFeedback}
               disabled={isLoading}
-              className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+              className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
             >
               📊 Vraag Feedback
             </button>
@@ -862,35 +1001,42 @@ Geef feedback in deze structuur:
       </div>
 
       {/* Scenario Instructions */}
-      <div className="mb-4 p-3 bg-pink-100 rounded-lg border border-pink-200">
-        <h4 className="text-sm font-semibold text-pink-800 mb-2">🎯 Jouw rol als BOA/Handhaver:</h4>
-        <ul className="text-xs text-pink-700 space-y-1">
-          <li>• <strong>Kalmeer</strong> de moeder en toon empathie</li>
-          <li>• <strong>Verzamel info:</strong> naam kind, leeftijd, uiterlijke kenmerken, laatste locatie</li>
-          <li>• <strong>Volg protocol:</strong> schakel beveiliging in, vraag om camera's, coördineer zoekactie</li>
-          <li>• <strong>Communiceer:</strong> houd de moeder op de hoogte van je acties</li>
+      <div className={`mb-4 p-3 ${
+        selectedScenario.id === 'saskia' 
+          ? 'bg-pink-100 border-pink-200' 
+          : 'bg-blue-100 border-blue-200'
+      } rounded-lg border`}>
+        <h4 className={`text-sm font-semibold ${
+          selectedScenario.id === 'saskia' ? 'text-pink-800' : 'text-blue-800'
+        } mb-2`}>🎯 Jouw rol als BOA/Handhaver:</h4>
+        <ul className={`text-xs ${
+          selectedScenario.id === 'saskia' ? 'text-pink-700' : 'text-blue-700'
+        } space-y-1`}>
+          {selectedScenario.instructions.map((instruction, index) => (
+            <li key={index}>• <strong>{instruction.split(':')[0]}:</strong> {instruction.split(':')[1] || instruction}</li>
+          ))}
         </ul>
       </div>
 
       {/* Feedback Section */}
       {showFeedback && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
-            <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
+            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center mr-2">
               <span className="text-white text-sm">📊</span>
             </span>
             Professionele Feedback
           </h4>
           {isLoading && !feedbackResponse ? (
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-blue-700 text-sm">Feedback wordt gegenereerd...</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+              <span className="text-green-700 text-sm">Feedback wordt gegenereerd...</span>
             </div>
           ) : (
             <div className="bg-white p-3 rounded border">
               <MarkdownRenderer 
                 content={feedbackResponse} 
-                className="text-blue-700 text-sm"
+                className="text-green-700 text-sm"
               />
             </div>
           )}
@@ -899,16 +1045,28 @@ Geef feedback in deze structuur:
 
       {/* Conversation History Display */}
       {conversationHistory.length > 0 && !showFeedback && (
-        <div className="mb-4 p-3 bg-white rounded-lg border border-pink-200 max-h-40 overflow-y-auto">
-          <h4 className="text-sm font-semibold text-pink-800 mb-2">📝 Gespreksverloop:</h4>
+        <div className={`mb-4 p-3 bg-white rounded-lg border ${
+          selectedScenario.id === 'saskia' ? 'border-pink-200' : 'border-blue-200'
+        } max-h-40 overflow-y-auto`}>
+          <h4 className={`text-sm font-semibold ${
+            selectedScenario.id === 'saskia' ? 'text-pink-800' : 'text-blue-800'
+          } mb-2`}>📝 Gespreksverloop:</h4>
           <div className="space-y-2">
             {conversationHistory.map((turn, index) => (
               <div key={index} className={`text-xs p-2 rounded ${
                 turn.speaker === 'Student' 
-                  ? 'bg-blue-50 border-l-2 border-blue-400' 
-                  : 'bg-pink-50 border-l-2 border-pink-400'
+                  ? 'bg-green-50 border-l-2 border-green-400' 
+                  : selectedScenario.id === 'saskia'
+                    ? 'bg-pink-50 border-l-2 border-pink-400'
+                    : 'bg-blue-50 border-l-2 border-blue-400'
               }`}>
-                <strong className={turn.speaker === 'Student' ? 'text-blue-700' : 'text-pink-700'}>
+                <strong className={
+                  turn.speaker === 'Student' 
+                    ? 'text-green-700' 
+                    : selectedScenario.id === 'saskia' 
+                      ? 'text-pink-700' 
+                      : 'text-blue-700'
+                }>
                   {turn.speaker}:
                 </strong>
                 <span className="text-gray-700 ml-2">
@@ -924,7 +1082,7 @@ Geef feedback in deze structuur:
       {conversationHistory.length === 0 && !response && !streamingResponse && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-yellow-800 text-sm">
-            💡 <strong>Start het rollenspel:</strong> Typ bijvoorbeeld "Hallo, kan ik u helpen?" of "Goedemiddag, ik ben BOA Van der Berg. Wat is er aan de hand?"
+            💡 <strong>Start het rollenspel:</strong> Typ bijvoorbeeld "Hallo, kan ik u helpen?" of "Goedemiddag, ik ben BOA {selectedScenario.id === 'saskia' ? 'Van der Berg' : 'Jansen'}. Wat is er aan de hand?"
           </p>
         </div>
       )}
@@ -933,8 +1091,12 @@ Geef feedback in deze structuur:
         {/* Input Area */}
         <div className={`bg-white rounded-lg border transition-all duration-200 p-3 ${
           isDragOver 
-            ? 'border-pink-500 border-2 bg-pink-50' 
-            : 'border-pink-200'
+            ? selectedScenario.id === 'saskia'
+              ? 'border-pink-500 border-2 bg-pink-50'
+              : 'border-blue-500 border-2 bg-blue-50'
+            : selectedScenario.id === 'saskia'
+              ? 'border-pink-200'
+              : 'border-blue-200'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -942,11 +1104,19 @@ Geef feedback in deze structuur:
 
           {/* Drag & Drop Overlay */}
           {isDragOver && (
-            <div className="absolute inset-2 border-2 border-dashed border-pink-400 rounded-lg bg-pink-50 bg-opacity-90 flex items-center justify-center z-10">
+            <div className={`absolute inset-2 border-2 border-dashed ${
+              selectedScenario.id === 'saskia' 
+                ? 'border-pink-400 bg-pink-50' 
+                : 'border-blue-400 bg-blue-50'
+            } rounded-lg bg-opacity-90 flex items-center justify-center z-10`}>
               <div className="text-center">
                 <div className="text-4xl mb-2">📁</div>
-                <p className="text-pink-700 font-semibold">Drop bestanden of tekst hier</p>
-                <p className="text-pink-600 text-sm">Afbeeldingen, documenten, of URLs</p>
+                <p className={`${
+                  selectedScenario.id === 'saskia' ? 'text-pink-700' : 'text-blue-700'
+                } font-semibold`}>Drop bestanden of tekst hier</p>
+                <p className={`${
+                  selectedScenario.id === 'saskia' ? 'text-pink-600' : 'text-blue-600'
+                } text-sm`}>Afbeeldingen, documenten, of URLs</p>
               </div>
             </div>
           )}
@@ -977,7 +1147,11 @@ Geef feedback in deze structuur:
               <button
                 onClick={sendMessageStreaming}
                 disabled={(isLoading || isStreaming || isWaitingForStream || showFeedback) || (!message.trim() && getSelectedFiles().length === 0)}
-                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`px-4 py-2 ${
+                  selectedScenario.id === 'saskia' 
+                    ? 'bg-pink-600 hover:bg-pink-700 focus:ring-pink-500' 
+                    : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                } text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
               >
                 {isWaitingForStream ? '🤔' : isStreaming ? '💭' : isLoading ? '⏳' : '🚀'}
               </button>
@@ -987,28 +1161,54 @@ Geef feedback in deze structuur:
 
         {/* Response Area */}
         {isWaitingForStream && (
-          <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg">
+          <div className={`p-4 bg-gradient-to-r ${
+            selectedScenario.id === 'saskia' 
+              ? 'from-pink-50 to-purple-50 border-pink-200' 
+              : 'from-blue-50 to-indigo-50 border-blue-200'
+          } border rounded-lg`}>
             <div className="flex items-center space-x-3">
               <div className="flex space-x-1">
-                <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
-                <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                <div className={`w-3 h-3 ${
+                  selectedScenario.id === 'saskia' ? 'bg-pink-500' : 'bg-blue-500'
+                } rounded-full animate-pulse`}></div>
+                <div className={`w-3 h-3 ${
+                  selectedScenario.id === 'saskia' ? 'bg-purple-500' : 'bg-indigo-500'
+                } rounded-full animate-pulse`} style={{animationDelay: '0.2s'}}></div>
                 <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
               </div>
-              <span className="text-pink-700 font-medium">👶 Saskia denkt na over je reactie...</span>
+              <span className={`${
+                selectedScenario.id === 'saskia' ? 'text-pink-700' : 'text-blue-700'
+              } font-medium`}>{selectedScenario.character} denkt na over je reactie...</span>
             </div>
-            <p className="text-pink-600 text-sm mt-2 ml-12">Ze gaat reageren vanuit haar emotionele toestand... ✨</p>
+            <p className={`${
+              selectedScenario.id === 'saskia' ? 'text-pink-600' : 'text-blue-600'
+            } text-sm mt-2 ml-12`}>
+              {selectedScenario.id === 'saskia' ? 'Ze' : 'Hij'} gaat reageren vanuit {selectedScenario.id === 'saskia' ? 'haar' : 'zijn'} emotionele toestand... ✨
+            </p>
           </div>
         )}
         
         {isLoading && !isStreaming && !isWaitingForStream && (
-          <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg">
+          <div className={`p-3 ${
+            selectedScenario.id === 'saskia' 
+              ? 'bg-pink-50 border-pink-200' 
+              : 'bg-blue-50 border-blue-200'
+          } border rounded-lg`}>
             <div className="flex items-center space-x-2">
               <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className={`w-2 h-2 ${
+                  selectedScenario.id === 'saskia' ? 'bg-pink-400' : 'bg-blue-400'
+                } rounded-full animate-bounce`}></div>
+                <div className={`w-2 h-2 ${
+                  selectedScenario.id === 'saskia' ? 'bg-pink-400' : 'bg-blue-400'
+                } rounded-full animate-bounce`} style={{animationDelay: '0.1s'}}></div>
+                <div className={`w-2 h-2 ${
+                  selectedScenario.id === 'saskia' ? 'bg-pink-400' : 'bg-blue-400'
+                } rounded-full animate-bounce`} style={{animationDelay: '0.2s'}}></div>
               </div>
-              <span className="text-pink-700 text-sm">Saskia reageert...</span>
+              <span className={`${
+                selectedScenario.id === 'saskia' ? 'text-pink-700' : 'text-blue-700'
+              } text-sm`}>{selectedScenario.character.split(' ')[1] || selectedScenario.character} reageert...</span>
             </div>
           </div>
         )}
@@ -1030,9 +1230,16 @@ Geef feedback in deze structuur:
                 ) : (
                   <>
                     <span className={`w-3 h-3 rounded-full mr-2 ${
-                      isStreaming ? 'bg-pink-600 animate-pulse' : 'bg-green-600'
+                      isStreaming 
+                        ? selectedScenario.id === 'saskia' 
+                          ? 'bg-pink-600 animate-pulse' 
+                          : 'bg-blue-600 animate-pulse'
+                        : 'bg-green-600'
                     }`}></span>
-                    {isStreaming ? '🎭 Saskia reageert live:' : '👶 Saskia zegt:'}
+                    {isStreaming 
+                      ? `🎭 ${selectedScenario.character.split(' ')[1] || selectedScenario.character} reageert live:` 
+                      : `${selectedScenario.character} zegt:`
+                    }
                   </>
                 )}
               </span>
@@ -1049,7 +1256,9 @@ Geef feedback in deze structuur:
                     className="text-gray-700 text-sm"
                   />
                   {isStreaming && (
-                    <span className="inline-block w-2 h-4 bg-pink-600 animate-pulse ml-1 align-text-bottom"></span>
+                    <span className={`inline-block w-2 h-4 ${
+                      selectedScenario.id === 'saskia' ? 'bg-pink-600' : 'bg-blue-600'
+                    } animate-pulse ml-1 align-text-bottom`}></span>
                   )}
                 </div>
               )}
