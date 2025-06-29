@@ -544,13 +544,10 @@ Benadruk dat studenten altijd officiële bronnen en docenten moeten raadplegen v
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
+          payload.message = `${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
         } else {
-          payload.message = `${htvSystemPrompt}\n\nAnalyseer de volgende bestanden vanuit HTV-perspectief:\n\n${fileContexts}`
+          payload.message = `Analyseer de volgende bestanden:\n\n${fileContexts}`
         }
-      } else {
-        // Add system prompt to regular messages
-        payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}`
       }
 
       // Start streaming request
@@ -689,13 +686,10 @@ Benadruk dat studenten altijd officiële bronnen en docenten moeten raadplegen v
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
+          payload.message = `${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`
         } else {
-          payload.message = `${htvSystemPrompt}\n\nAnalyseer de volgende bestanden vanuit HTV-perspectief:\n\n${fileContexts}`
+          payload.message = `Analyseer de volgende bestanden:\n\n${fileContexts}`
         }
-      } else {
-        // Add system prompt to regular messages
-        payload.message = `${htvSystemPrompt}\n\nStudentvraag: ${message}`
       }
 
       const res = await fetch('/api/chat', {
@@ -1026,7 +1020,7 @@ Benadruk dat studenten altijd officiële bronnen en docenten moeten raadplegen v
               <button
                 onClick={sendMessageStreaming}
                 disabled={(isLoading || isStreaming || isWaitingForStream) || (!message.trim() && getSelectedFiles().length === 0)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isWaitingForStream ? '🤔' : isStreaming ? '💭' : isLoading ? '⏳' : '🚀'}
               </button>
