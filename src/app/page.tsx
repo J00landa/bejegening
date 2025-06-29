@@ -141,6 +141,28 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Missing Child Scenario */}
+            <div className="p-4 bg-pink-50 rounded-lg border border-pink-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-3">👶</span>
+                <h3 className="font-semibold text-pink-800">Moeder kwijt kind</h3>
+              </div>
+              <p className="text-sm text-pink-700 mb-3">Paniekende moeder heeft haar kind verloren in winkelcentrum</p>
+              <div className="text-xs text-pink-600 space-y-1">
+                <p>• <strong>Rol:</strong> Emotionele moeder in paniek</p>
+                <p>• <strong>Emotie:</strong> Angstig, wanhopig, overstuur</p>
+                <p>• <strong>Uitdaging:</strong> Kalmeren, info verzamelen, protocol volgen</p>
+              </div>
+              <div className="mt-3 p-2 bg-pink-100 rounded text-xs text-pink-800">
+                <strong>Doelen student:</strong>
+                <ul className="mt-1 space-y-1">
+                  <li>• Moeder kalmeren en geruststellen</li>
+                  <li>• Info verzamelen (naam, leeftijd, uiterlijk, laatste locatie)</li>
+                  <li>• Opschalingsprotocol volgen (beveiliging, camera's)</li>
+                </ul>
+              </div>
+            </div>
+
             <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h3 className="font-semibold text-gray-800 mb-2">💡 Of beschrijf je eigen scenario:</h3>
               <p className="text-sm text-gray-600">
