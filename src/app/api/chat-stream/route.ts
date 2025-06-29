@@ -20,14 +20,34 @@ export async function POST(request: NextRequest) {
     // Check API key
     if (!process.env.GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY not found in environment variables')
-      return NextResponse.json(
-        { 
-          error: 'API configuratie ontbreekt. Check Environment Variables.',
-          hint: 'Voeg GEMINI_API_KEY toe aan je environment variables',
-          debug: 'Environment variable GEMINI_API_KEY is not set'
-        }, 
-        { status: 500 }
-      )
+      
+      // Return streaming error response instead of JSON
+      const stream = new ReadableStream({
+        start(controller) {
+          const errorData = JSON.stringify({
+            error: true,
+            message: 'API configuratie ontbreekt. Voeg GEMINI_API_KEY toe aan je environment variables.',
+            hint: 'Check je Netlify environment variables en zorg dat GEMINI_API_KEY correct is ingesteld.'
+          })
+          
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${errorData}\n\n`)
+          )
+          
+          controller.close()
+        }
+      })
+      
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      })
     }
 
     // Parse request data
@@ -37,18 +57,62 @@ export async function POST(request: NextRequest) {
     const { message, image, images, useGrounding = true, aiModel = 'smart' } = body
 
     if (!message) {
-      return NextResponse.json(
-        { error: 'Bericht is vereist' },
-        { status: 400 }
-      )
+      // Return streaming error response
+      const stream = new ReadableStream({
+        start(controller) {
+          const errorData = JSON.stringify({
+            error: true,
+            message: 'Bericht is vereist'
+          })
+          
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${errorData}\n\n`)
+          )
+          
+          controller.close()
+        }
+      })
+      
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      })
     }
 
     // Input validation
     if (typeof message !== 'string' || message.length > 100000) {
-      return NextResponse.json(
-        { error: 'Bericht moet een string zijn van maximaal 100.000 karakters' },
-        { status: 400 }
-      )
+      // Return streaming error response
+      const stream = new ReadableStream({
+        start(controller) {
+          const errorData = JSON.stringify({
+            error: true,
+            message: 'Bericht moet een string zijn van maximaal 100.000 karakters'
+          })
+          
+          controller.enqueue(
+            new TextEncoder().encode(`data: ${errorData}\n\n`)
+          )
+          
+          controller.close()
+        }
+      })
+      
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
+      })
     }
 
     // Selecteer het juiste model op basis van aiModel
@@ -187,15 +251,34 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Streaming API error:', error)
     
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    // Return streaming error response instead of JSON
+    const stream = new ReadableStream({
+      start(controller) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        const errorData = JSON.stringify({
+          error: true,
+          message: 'Er is een fout opgetreden bij het verwerken van je bericht',
+          details: errorMessage,
+          timestamp: new Date().toISOString()
+        })
+        
+        controller.enqueue(
+          new TextEncoder().encode(`data: ${errorData}\n\n`)
+        )
+        
+        controller.close()
+      }
+    })
     
-    return NextResponse.json(
-      { 
-        error: 'Er is een fout opgetreden bij het verwerken van je bericht',
-        details: errorMessage,
-        timestamp: new Date().toISOString()
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type',
       },
-      { status: 500 }
-    )
+    })
   }
 } 
