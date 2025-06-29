@@ -817,8 +817,7 @@ Geef feedback in deze structuur:
                 
                 // Add token to streaming response
                 const newResponse = currentStreamingResponseRef.current + data.token
-                
-             
+                c
               }
             }
           }
@@ -826,44 +825,34 @@ Geef feedback in deze structuur:
       }
     }
   }
-}   currentStreamingResponseRef.current = newResponse
+}urrentStreamingResponseRef.current = newResponse
                 setStreamingResponse(newResponse)
                 console.log('Streaming token:', data.token, 'Total length:', newResponse.length)
               }
-            } catch (error) {
-              console.error('Error parsing streaming data:', error)
+            } catch (parseError) {
+              console.error('Error parsing streaming data:', parseError)
             }
           }
         }
       }
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Streaming error:', error)
-      setIsStreaming(false)
-      setIsWaitingForStream(false)
-      setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown streaming error'}`)
-    } finally {
-      // Clean up
-      setMessage('')
-      setUploadedFiles(prev => prev.map(file => ({ ...file, selected: false })))
-      abortControllerRef.current = null
-    }
-  }
-              }
-            } catch (error) {
-              console.error('Error parsing streaming data:', error)
-            }
-          }
+      
+      if (error.name === 'AbortError') {
+        // Request was aborted - keep current streaming response if available
+        if (!currentStreamingResponseRef.current) {
+          setResponse('Generatie gestopt door gebruiker.')
+        } else {
+          setResponse(currentStreamingResponseRef.current)
         }
+      } else {
+        setResponse('Error: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
       }
-    } catch (error) {
-      console.error('Streaming error:', error)
+    } finally {
       setIsStreaming(false)
       setIsWaitingForStream(false)
-      setResponse(`Error: ${error instanceof Error ? error.message : 'Unknown streaming error'}`)
-    } finally {
-      // Clean up
-      setMessage('')
-      setUploadedFiles(prev => prev.map(file => ({ ...file, selected: false })))
+      setIsLoading(false)
       abortControllerRef.current = null
     }
   }
