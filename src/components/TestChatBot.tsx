@@ -828,10 +828,7 @@ Geef feedback in deze structuur:
 
     setIsLoading(true)
     try {
-
-      }
-    }
-  }
+      const payload: any = { 
 }      const payload: any = { 
         message, 
         useGrounding: aiModel === 'internet' ? useGrounding : false,
@@ -859,13 +856,13 @@ Geef feedback in deze structuur:
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = createSaskiaPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, !response)
+          payload.message = createSaskiaPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, isFirstMessage())
         } else {
-          payload.message = createSaskiaPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, !response)
+          payload.message = createSaskiaPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, isFirstMessage())
         }
       } else {
         // No files - just the message with proper prompt template  
-        payload.message = createSaskiaPrompt(message, !response)
+        payload.message = createSaskiaPrompt(message, isFirstMessage())
       }
 
       const res = await fetch('/api/chat', {
@@ -1173,7 +1170,7 @@ Geef feedback in deze structuur:
   )
 }
         </span>
-        Test je API Key
+        HTV Conversational Trainer
       </h3>
       
       <div className="space-y-4">
