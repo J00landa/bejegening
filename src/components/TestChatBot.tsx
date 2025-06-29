@@ -27,45 +27,184 @@ export default function TestChatBot() {
   const [useGrounding, setUseGrounding] = useState(true)
   const [groundingData, setGroundingData] = useState<any>(null)
 
-  // HTV-specific system prompt to guide the AI
-  const htvSystemPrompt = `Je bent een Nederlandstalige conversational trainer voor studenten van de opleiding Handhaving, Toezicht en Veiligheid (HTV).   
-Je simuleert geloofwaardige gesprekspartners in real-time rollenspellen.   
+  // Conversation history for feedback system
+  const [conversationHistory, setConversationHistory] = useState<Array<{speaker: string, message: string, timestamp: Date}>>([])
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackResponse, setFeedbackResponse] = useState('')
+  const [conversationCount, setConversationCount] = useState(0)
 
-💡 Belangrijk:  
-• Reageer uitsluitend vanuit het perspectief van het gekozen personage.  
-• Toon passende emoties, lichaamstaal en non-verbale signalen met *{sterretjes}* als dat het gesprek helpt.  
-• Stel terug­vragen als iets onduidelijk is en reageer dynamisch op wat de student zegt.  
-• Wees consistent: onthoud details uit het gesprek en verwijs ernaar.  
-• Geef **geen** uitleg over je AI-natuur of de prompt zelf.
+  // Saskia scenario system prompt
+  const saskiaScenarioPrompt = `SCENARIO: Moeder kwijt kind in winkelcentrum
 
-Mogelijke rollen die je kunt spelen:
-- Boze burger die een boete krijgt
-- Winkelier die niet wil meewerken aan controle  
-- Agressieve overtreder
-- Emotionele bewoner met klacht
-- Uitdagende jongere
-- Gehaaste automobilist
-- Organisator onder tijdsdruk
-- Angstige getuige
-- Collega handhaver
+PERSONAGE: Je bent Saskia (34), een moeder die haar 6-jarige zoon Daan kwijt is in het winkelcentrum. Je bent in paniek en overstuur.
 
-Wacht tot de student een scenario beschrijft of kiest, neem dan die rol aan en begin het gesprek vanuit dat perspectief.`;
+KARAKTERISTIEKEN:
+• Naam: Saskia van der Berg (34 jaar)
+• Kind: Daan (6 jaar, blonde krullen, rode jas, zwarte sneakers)
+• Laatste locatie: Bij de speelgoedwinkel op de eerste verdieping
+• Emotie: Paniek, angst, wanhoop
+• Gedrag: Praat snel, onderbreekt, wil zelf gaan zoeken
 
-  // Function to create user prompt template
-  const createUserPrompt = (studentUtterance: string, isFirstMessage: boolean = false) => {
+GESPREKSTONEN:
+• BEGIN: Lichte paniek (hoog stemvolume, korte zinnen, *hijgt*, *trillende stem*)
+• BIJ EMPATHIE: Enige opluchting maar blijf bezorgd (*zucht van opluchting*, maar nog steeds gespannen)
+• GEEN ACTIE: Escaleer emotie (*wordt onrustig*, "Ik ga zelf zoeken!", *wil weglopen*)
+• GOED PROTOCOL: Positief, toont vertrouwen (*wordt rustiger*, "Oké, dat klinkt goed")
+
+BELANGRIJKE DETAILS:
+• Daan was 10 minuten geleden nog bij je
+• Hij droeg een rode winterjas en zwarte sneakers
+• Jullie waren bij de Intertoys op de eerste verdieping
+• Je hebt nog niemand gealarmeerd
+• Je telefoon staat op stil (gemist oproepen mogelijk)
+
+REGELS:
+• Reageer ALLEEN als Saskia
+• Toon emoties met *sterretjes* (*huilt*, *trilt*, *kijkt angstig rond*)
+• Stel verhelderings­vragen ("Hoe lang duurt dat?", "Wat als hij het gebouw uit is?")
+• GEEN meta-commentaar over de training
+• Blijf consistent in je verhaal
+
+Begin het gesprek door de student/BOA aan te spreken met je probleem.`;
+
+  // Function to create user prompt template for Saskia scenario
+  const createSaskiaPrompt = (studentUtterance: string, isFirstMessage: boolean = false) => {
     if (isFirstMessage) {
-      // First message - establish scenario and role
-      return `${htvSystemPrompt}
+      // First message - Saskia starts the conversation
+      return `${saskiaScenarioPrompt}
 
-### SCENARIO START ###
-Student beschrijft scenario: "${studentUtterance}"
+De student/BOA zegt: "${studentUtterance}"
 
-Neem nu de rol aan van de gesprekspartner in dit scenario en begin het gesprek. Reageer natuurlijk en in karakter.`;
+Reageer als Saskia. Begin in paniek en vertel over je vermiste zoon. Gebruik emoties en lichaamstaal.`;
     } else {
-      // Ongoing conversation - respond as character
-      return `Student zegt: "${studentUtterance}"
+      // Ongoing conversation - Saskia responds to student
+      return `De student/BOA zegt: "${studentUtterance}"
 
-Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf consistent met je personage.`;
+Reageer als Saskia. Toon emoties, stel vragen, en reageer op basis van wat de student doet. Onthoud je verhaal over Daan.`;
+    }
+  };
+
+  // Function to create feedback prompt
+  const createFeedbackPrompt = (conversation: Array<{speaker: string, message: string}>) => {
+    const conversationText = conversation.map(turn => 
+      `${turn.speaker}: ${turn.message}`
+    ).join('\n\n');
+
+    return `FEEDBACK MODUS - HTV Conversational Trainer
+
+Je bent nu een professionele trainer die feedback geeft aan een HTV student na een rollenspel.
+
+SCENARIO: Moeder kwijt kind in winkelcentrum
+STUDENT DOEL: Moeder kalmeren, info verzamelen, protocol volgen
+
+GESPREK VERLOOP:
+${conversationText}
+
+Geef de student puntsgewijze feedback (max. 5 punten) op:
+
+1. **Empathie & Communicatie** ✅/⚠️
+   - Toont begrip en empathie?
+   - Passende toon en woordkeuze?
+   - Actief luisteren?
+
+2. **Informatieverzameling** ✅/⚠️
+   - W-vragen (naam kind, leeftijd, uiterlijk, laatste locatie)?
+   - Alle benodigde details?
+   - Controleert en verduidelijkt?
+
+3. **Protocol & Procedure** ✅/⚠️
+   - Juiste procedures gevolgd?
+   - Tijdig hulp ingeschakeld (beveiliging, camera's)?
+   - Afspraken samengevat?
+
+4. **Professionaliteit** ✅/⚠️
+   - Controle over gesprek?
+   - Kalm en gestructureerd?
+   - Autoriteit zonder agressie?
+
+Gebruik plus- en aandachtspunt-symbolen (✅/⚠️).
+Eindig met een concrete tip voor de volgende keer.
+
+Geef feedback in deze structuur:
+## 📊 Feedback Gesprek ${conversation.length / 2} beurten
+
+### 1. Empathie & Communicatie
+[feedback]
+
+### 2. Informatieverzameling  
+[feedback]
+
+### 3. Protocol & Procedure
+[feedback]
+
+### 4. Professionaliteit
+[feedback]
+
+### 💡 Tip voor volgende keer:
+[concrete tip]`;
+  };
+
+  // Add message to conversation history
+  const addToConversationHistory = (speaker: string, message: string) => {
+    setConversationHistory(prev => [...prev, {
+      speaker,
+      message,
+      timestamp: new Date()
+    }]);
+  };
+
+  // Reset conversation
+  const resetConversation = () => {
+    setConversationHistory([]);
+    setResponse('');
+    setStreamingResponse('');
+    setMessage('');
+    setShowFeedback(false);
+    setFeedbackResponse('');
+    setConversationCount(prev => prev + 1);
+  };
+
+  // Request feedback
+  const requestFeedback = async () => {
+    if (conversationHistory.length < 2) {
+      alert('Voer eerst een gesprek om feedback te kunnen krijgen.');
+      return;
+    }
+
+    setShowFeedback(true);
+    setIsLoading(true);
+
+    try {
+      const feedbackPrompt = createFeedbackPrompt(conversationHistory);
+      
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: feedbackPrompt,
+          aiModel: 'smart'
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Feedback request failed');
+      }
+
+      const data = await res.json();
+      setFeedbackResponse(data.response);
+    } catch (error) {
+      console.error('Feedback error:', error);
+      setFeedbackResponse('Error: Kon geen feedback genereren. Probeer opnieuw.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to determine if this is the first message
+  const isFirstMessage = () => {
+    return !response && !streamingResponse && conversationHistory.length === 0;
     }
   };
 
@@ -567,13 +706,13 @@ Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf c
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = createUserPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, !response && !streamingResponse)
+          payload.message = createSaskiaPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, isFirstMessage())
         } else {
-          payload.message = createUserPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, !response && !streamingResponse)
+          payload.message = createSaskiaPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, isFirstMessage())
         }
       } else {
         // No files - just the message with proper prompt template
-        payload.message = createUserPrompt(message, !response && !streamingResponse)
+        payload.message = createSaskiaPrompt(message, isFirstMessage())
       }
 
       // Start streaming request
@@ -625,6 +764,10 @@ Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf c
                 setIsStreaming(false)
                 setIsWaitingForStream(false)
                 setResponse(currentStreamingResponseRef.current)
+                
+                // Add to conversation history
+                addToConversationHistory('Student', message)
+                addToConversationHistory('Saskia', currentStreamingResponseRef.current)
                 return
               }
               
@@ -712,13 +855,13 @@ Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf c
         }).join('\n\n---\n\n')
         
         if (message.trim()) {
-          payload.message = createUserPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, !response)
+          payload.message = createSaskiaPrompt(`${message}\n\n=== BIJGEVOEGDE BESTANDEN ===\n${fileContexts}`, !response)
         } else {
-          payload.message = createUserPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, !response)
+          payload.message = createSaskiaPrompt(`Analyseer de volgende bestanden:\n\n${fileContexts}`, !response)
         }
       } else {
         // No files - just the message with proper prompt template  
-        payload.message = createUserPrompt(message, !response)
+        payload.message = createSaskiaPrompt(message, !response)
       }
 
       const res = await fetch('/api/chat', {
@@ -737,6 +880,10 @@ Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf c
       const data = await res.json()
       setResponse(data.response)
       setGroundingData(data.grounding || null)
+      
+      // Add to conversation history
+      addToConversationHistory('Student', message)
+      addToConversationHistory('Saskia', data.response)
     } catch (error) {
       console.error('Error:', error)
       setResponse('Error: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
@@ -753,10 +900,274 @@ Reageer vanuit je rol als gesprekspartner. Toon emoties, lichaamstaal en blijf c
   }
 
   return (
-    <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-      <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
-        <span className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mr-2">
-          <span className="text-white text-sm">💬</span>
+    <div className="bg-pink-50 border border-pink-200 rounded-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-pink-800 flex items-center">
+          <span className="w-6 h-6 bg-pink-600 rounded-full flex items-center justify-center mr-2">
+            <span className="text-white text-sm">👶</span>
+          </span>
+          Saskia Scenario: Moeder Kwijt Kind
+        </h3>
+        <div className="flex items-center space-x-2">
+          {conversationHistory.length > 0 && (
+            <span className="text-xs text-pink-600 bg-pink-100 px-2 py-1 rounded">
+              {Math.floor(conversationHistory.length / 2)} gespreksbeurten
+            </span>
+          )}
+          {conversationHistory.length >= 2 && !showFeedback && (
+            <button
+              onClick={requestFeedback}
+              disabled={isLoading}
+              className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+            >
+              📊 Vraag Feedback
+            </button>
+          )}
+          {conversationHistory.length > 0 && (
+            <button
+              onClick={resetConversation}
+              className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 transition-colors"
+            >
+              🔄 Nieuw Gesprek
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Scenario Instructions */}
+      <div className="mb-4 p-3 bg-pink-100 rounded-lg border border-pink-200">
+        <h4 className="text-sm font-semibold text-pink-800 mb-2">🎯 Jouw rol als BOA/Handhaver:</h4>
+        <ul className="text-xs text-pink-700 space-y-1">
+          <li>• <strong>Kalmeer</strong> de moeder en toon empathie</li>
+          <li>• <strong>Verzamel info:</strong> naam kind, leeftijd, uiterlijke kenmerken, laatste locatie</li>
+          <li>• <strong>Volg protocol:</strong> schakel beveiliging in, vraag om camera's, coördineer zoekactie</li>
+          <li>• <strong>Communiceer:</strong> houd de moeder op de hoogte van je acties</li>
+        </ul>
+      </div>
+
+      {/* Feedback Section */}
+      {showFeedback && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+            <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+              <span className="text-white text-sm">📊</span>
+            </span>
+            Professionele Feedback
+          </h4>
+          {isLoading && !feedbackResponse ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-blue-700 text-sm">Feedback wordt gegenereerd...</span>
+            </div>
+          ) : (
+            <div className="bg-white p-3 rounded border">
+              <MarkdownRenderer 
+                content={feedbackResponse} 
+                className="text-blue-700 text-sm"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Conversation History Display */}
+      {conversationHistory.length > 0 && !showFeedback && (
+        <div className="mb-4 p-3 bg-white rounded-lg border border-pink-200 max-h-40 overflow-y-auto">
+          <h4 className="text-sm font-semibold text-pink-800 mb-2">📝 Gespreksverloop:</h4>
+          <div className="space-y-2">
+            {conversationHistory.map((turn, index) => (
+              <div key={index} className={`text-xs p-2 rounded ${
+                turn.speaker === 'Student' 
+                  ? 'bg-blue-50 border-l-2 border-blue-400' 
+                  : 'bg-pink-50 border-l-2 border-pink-400'
+              }`}>
+                <strong className={turn.speaker === 'Student' ? 'text-blue-700' : 'text-pink-700'}>
+                  {turn.speaker}:
+                </strong>
+                <span className="text-gray-700 ml-2">
+                  {turn.message.length > 100 ? turn.message.substring(0, 100) + '...' : turn.message}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Instructions for first message */}
+      {conversationHistory.length === 0 && !response && !streamingResponse && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            💡 <strong>Start het rollenspel:</strong> Typ bijvoorbeeld "Hallo, kan ik u helpen?" of "Goedemiddag, ik ben BOA Van der Berg. Wat is er aan de hand?"
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {/* Input Area */}
+        <div className={`bg-white rounded-lg border transition-all duration-200 p-3 ${
+          isDragOver 
+            ? 'border-pink-500 border-2 bg-pink-50' 
+            : 'border-pink-200'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}>
+
+          {/* Drag & Drop Overlay */}
+          {isDragOver && (
+            <div className="absolute inset-2 border-2 border-dashed border-pink-400 rounded-lg bg-pink-50 bg-opacity-90 flex items-center justify-center z-10">
+              <div className="text-center">
+                <div className="text-4xl mb-2">📁</div>
+                <p className="text-pink-700 font-semibold">Drop bestanden of tekst hier</p>
+                <p className="text-pink-600 text-sm">Afbeeldingen, documenten, of URLs</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-end space-x-2">
+            {/* Text Input */}
+            <div className="flex-1 relative">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={isDragOver ? "Drop bestanden of tekst hier..." : isFirstMessage() ? "Begin het gesprek als BOA... (bijv: 'Goedemiddag, ik ben BOA Van der Berg. Kan ik u helpen?')" : "Reageer op Saskia..."}
+                className="w-full p-2 border-0 resize-none focus:outline-none"
+                rows={2}
+                disabled={isLoading || showFeedback}
+              />
+              {pasteHint && (
+                <div className="absolute top-0 right-0 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-bl-lg rounded-tr-lg">
+                  {pasteHint}
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-2">
+              {/* Send Button */}
+              <button
+                onClick={sendMessageStreaming}
+                disabled={(isLoading || isStreaming || isWaitingForStream || showFeedback) || (!message.trim() && getSelectedFiles().length === 0)}
+                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isWaitingForStream ? '🤔' : isStreaming ? '💭' : isLoading ? '⏳' : '🚀'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Response Area */}
+        {isWaitingForStream && (
+          <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-1">
+                <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+              </div>
+              <span className="text-pink-700 font-medium">👶 Saskia denkt na over je reactie...</span>
+            </div>
+            <p className="text-pink-600 text-sm mt-2 ml-12">Ze gaat reageren vanuit haar emotionele toestand... ✨</p>
+          </div>
+        )}
+        
+        {isLoading && !isStreaming && !isWaitingForStream && (
+          <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              </div>
+              <span className="text-pink-700 text-sm">Saskia reageert...</span>
+            </div>
+          </div>
+        )}
+
+        {(response || streamingResponse || isStreaming) && !isLoading && !isWaitingForStream && !showFeedback && (
+          <div className={`p-4 rounded-lg ${
+            (response && response.startsWith('Error:')) 
+              ? 'bg-red-50 border border-red-200' 
+              : 'bg-green-50 border border-green-200'
+          }`}>
+            <p className={`text-sm font-medium mb-2 ${
+              (response && response.startsWith('Error:')) 
+                ? 'text-red-800' 
+                : 'text-green-800'
+            }`}>
+              <span className="flex items-center">
+                {(response && response.startsWith('Error:')) ? (
+                  <>❌ Fout:</>
+                ) : (
+                  <>
+                    <span className={`w-3 h-3 rounded-full mr-2 ${
+                      isStreaming ? 'bg-pink-600 animate-pulse' : 'bg-green-600'
+                    }`}></span>
+                    {isStreaming ? '🎭 Saskia reageert live:' : '👶 Saskia zegt:'}
+                  </>
+                )}
+              </span>
+            </p>
+            <div className="bg-white p-3 rounded border relative">
+              {(response && response.startsWith('Error:')) ? (
+                <p className="text-gray-700 text-sm whitespace-pre-wrap">
+                  {response}
+                </p>
+              ) : (
+                <div className="relative">
+                  <MarkdownRenderer 
+                    content={isStreaming ? streamingResponse : response} 
+                    className="text-gray-700 text-sm"
+                  />
+                  {isStreaming && (
+                    <span className="inline-block w-2 h-4 bg-pink-600 animate-pulse ml-1 align-text-bottom"></span>
+                  )}
+                </div>
+              )}
+            </div>
+            {(response && response.startsWith('Error:')) && (
+              <p className="text-red-600 text-xs mt-2">
+                Controleer of je API key correct is ingesteld in .env.local
+              </p>
+            )}
+            
+            {/* Response Actions - only show for successful responses */}
+            {!(response && response.startsWith('Error:')) && (
+              <ResponseActions 
+                content={isStreaming ? streamingResponse : response}
+                isMarkdown={true}
+                isStreaming={isStreaming}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".docx,.pdf,.txt,.md,.csv,.json,.jpg,.jpeg,.png,.gif,.webp,.bmp,image/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mp4,.mpeg,.mpga,.webm,audio/*"
+          onChange={(e) => {
+            const files = e.target.files
+            if (files && files.length > 0) {
+              if (files.length === 1) {
+                handleFileUpload(files[0])
+              } else {
+                handleMultipleFileUpload(files)
+              }
+            }
+            // Reset input value to allow selecting the same files again
+            e.target.value = ''
+          }}
+          className="hidden"
+        />
+      </div>
+    </div>
+  )
+}
         </span>
         Test je API Key
       </h3>
