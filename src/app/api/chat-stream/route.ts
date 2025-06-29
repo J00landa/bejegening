@@ -4,12 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 // Initialize Gemini AI client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-// Helper function to convert base64 to buffer
-function base64ToBuffer(base64: string): Buffer {
-  const base64Data = base64.replace(/^data:image\/\w+;base64,/, '')
-  return Buffer.from(base64Data, 'base64')
-}
-
 // Google Search tool configuratie
 const googleSearchTool = {
   googleSearch: {}
@@ -50,49 +44,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Parse request data
+    // Parse request data - now expecting contents array
     const body = await request.json()
     console.log('Received request body:', body)
     
-    const { message, image, images, useGrounding = true, aiModel = 'smart' } = body
+    const { contents, useGrounding = true, aiModel = 'smart' } = body
 
-    if (!message) {
+    if (!contents || !Array.isArray(contents) || contents.length === 0) {
       // Return streaming error response
       const stream = new ReadableStream({
         start(controller) {
           const errorData = JSON.stringify({
             error: true,
-            message: 'Bericht is vereist'
-          })
-          
-          controller.enqueue(
-            new TextEncoder().encode(`data: ${errorData}\n\n`)
-          )
-          
-          controller.close()
-        }
-      })
-      
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      })
-    }
-
-    // Input validation
-    if (typeof message !== 'string' || message.length > 100000) {
-      // Return streaming error response
-      const stream = new ReadableStream({
-        start(controller) {
-          const errorData = JSON.stringify({
-            error: true,
-            message: 'Bericht moet een string zijn van maximaal 100.000 karakters'
+            message: 'Contents array is vereist'
           })
           
           controller.enqueue(
@@ -128,8 +92,6 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          let result;
-          
           // Helper function to generate content with fallback
           const generateStreamWithFallback = async (requestConfig: any) => {
             try {
@@ -146,44 +108,11 @@ export async function POST(request: NextRequest) {
             }
           }
           
-          if (images && images.length > 0) {
-            // Multiple images - use new images array
-            const imageParts = images.map((imageData: string) => {
-              const imageBuffer = base64ToBuffer(imageData)
-              return {
-                inlineData: {
-                  data: imageBuffer.toString('base64'),
-                  mimeType: 'image/jpeg'
-                }
-              }
-            })
-            
-            result = await generateStreamWithFallback({
-              contents: [{ role: 'user', parts: [{ text: message }, ...imageParts] }],
-              tools: tools
-            })
-          } else if (image) {
-            // Backward compatibility - single image (legacy)
-            const imageBuffer = base64ToBuffer(image)
-            
-            const imagePart = {
-              inlineData: {
-                data: imageBuffer.toString('base64'),
-                mimeType: 'image/jpeg'
-              }
-            }
-            
-            result = await generateStreamWithFallback({
-              contents: [{ role: 'user', parts: [{ text: message }, imagePart] }],
-              tools: tools
-            })
-          } else {
-            // Text only
-            result = await generateStreamWithFallback({
-              contents: [{ role: 'user', parts: [{ text: message }] }],
-              tools: tools
-            })
-          }
+          // Use the contents array directly
+          const result = await generateStreamWithFallback({
+            contents: contents,
+            tools: tools
+          })
 
           // Stream the response token by token
           for await (const chunk of result.stream) {
@@ -281,4 +210,4 @@ export async function POST(request: NextRequest) {
       },
     })
   }
-} 
+}
