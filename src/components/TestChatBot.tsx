@@ -817,43 +817,14 @@ Geef feedback in deze structuur:
                 
                 // Add token to streaming response
                 const newResponse = currentStreamingResponseRef.current + data.token
-                c
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}urrentStreamingResponseRef.current = newResponse
+                currentStreamingResponseRef.current = newResponse
                 setStreamingResponse(newResponse)
                 console.log('Streaming token:', data.token, 'Total length:', newResponse.length)
               }
-            } catch (parseError) {
-              console.error('Error parsing streaming data:', parseError)
             }
           }
         }
       }
-
-    } catch (error: any) {
-      console.error('Streaming error:', error)
-      
-      if (error.name === 'AbortError') {
-        // Request was aborted - keep current streaming response if available
-        if (!currentStreamingResponseRef.current) {
-          setResponse('Generatie gestopt door gebruiker.')
-        } else {
-          setResponse(currentStreamingResponseRef.current)
-        }
-      } else {
-        setResponse('Error: ' + (error instanceof Error ? error.message : 'Onbekende fout'))
-      }
-    } finally {
-      setIsStreaming(false)
-      setIsWaitingForStream(false)
-      setIsLoading(false)
-      abortControllerRef.current = null
     }
   }
 
